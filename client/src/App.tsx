@@ -1,19 +1,39 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Lenis from '@studio-freight/lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import Events from './pages/Events';
 import './index.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
 function App() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [currentRoute, setCurrentRoute] = useState(window.location.hash || '#home');
 
   useEffect(() => {
-    // Lenis Smooth Scroll
+    const handleHashChange = () => {
+      setCurrentRoute(window.location.hash);
+      window.scrollTo(0, 0); // Reset scroll on page change
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  useEffect(() => {
+    // Only initialize Lenis and GSAP ScrollTrigger on the Home route
+    if (currentRoute === '#events') {
+       // Revert body styles that might have been applied by GSAP
+       document.body.style.backgroundColor = '';
+       document.body.style.color = '';
+       return;
+    }
+
+    // @ts-ignore
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -27,13 +47,14 @@ function App() {
     });
 
     function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
+      if (window.location.hash !== '#events') {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
     }
     requestAnimationFrame(raf);
 
     // ScrollTrigger Background Transition
-    // Use document.documentElement or document.body directly
     const ctx = gsap.context(() => {
       gsap.to(document.body, {
         backgroundColor: '#111',
@@ -59,7 +80,11 @@ function App() {
       lenis.destroy();
       ctx.revert();
     };
-  }, []);
+  }, [currentRoute]);
+
+  if (currentRoute === '#events') {
+    return <Events />;
+  }
 
   return (
     <div className="App" ref={containerRef}>

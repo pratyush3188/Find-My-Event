@@ -111,3 +111,44 @@ html.lenis {
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
 }
+
+/* Responsive overrides for Events page */
+@media (max-width: 768px) {
+  .event-card-container {
+    flex-direction: column !important;
+    padding: 1.25rem !important;
+    gap: 1.25rem !important;
+  }
+  .event-card-image-box {
+    width: 100% !important;
+    height: 220px !important;
+  }
+  .event-actions-container {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+  .event-actions-container button {
+    width: 100% !important;
+  }
+  .top-nav-container {
+    padding: 1rem 1.5rem !important;
+  }
+  .desktop-nav-links {
+    display: none !important;
+  }
+  .create-event-text {
+    display: none !important;
+  }
+  .events-main-section {
+    padding: 2rem 1.5rem !important;
+  }
+  .events-h1 {
+    font-size: 2.5rem !important;
+    margin-bottom: 2rem !important;
+  }
+  .events-dot {
+    font-size: 3rem !important;
+  }
+}
+
+@media (max-width: 768px) { .mobile-hidden { display: none !important; } }
