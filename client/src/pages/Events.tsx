@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, MapPin, MoreHorizontal, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, MoreHorizontal, Grid, List, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import '../index.css';
@@ -11,7 +11,8 @@ const events = [
     organizer: 'JECRC University',
     date: 'Oct 12, 2024 • 9:00 AM PST',
     venue: 'Moscone Center, SF / Hybrid',
-    image: '/event1.png'
+    image: '/event1.png',
+    category: 'Tech'
   },
   {
     id: 2,
@@ -19,7 +20,8 @@ const events = [
     organizer: 'JECRC University',
     date: 'Oct 12, 2024 • 9:00 AM PST',
     venue: 'Moscone Center, SF / Hybrid',
-    image: '/event2.png'
+    image: '/event2.png',
+    category: 'Music'
   },
   {
     id: 3,
@@ -27,7 +29,8 @@ const events = [
     organizer: 'JECRC University',
     date: 'Oct 12, 2024 • 9:00 AM PST',
     venue: 'Moscone Center, SF / Hybrid',
-    image: '/event1.png'
+    image: '/event1.png',
+    category: 'Tech'
   }
 ];
 
@@ -150,143 +153,124 @@ const EventCard = ({ event, index, onViewMore, onRegister }: { event: any, index
   );
 };
 
-const EventDetails = ({ event, onBack, onRegister }: any) => {
+// ─── Grid View Card ───────────────────────────────────────────────────────────
+const GridEventCard = ({ event, index, onViewMore, onRegister }: { event: any, index: number, onViewMore: () => void, onRegister: () => void }) => {
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="events-main-section" 
-      style={{ padding: '8rem 6rem 4rem 6rem', maxWidth: '900px', margin: '0 auto', width: '100%' }}
+      className="event-card-container"
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+      transition={{ duration: 0.7, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      whileHover="hover"
+      whileTap="hover"
+      style={{
+        background: '#151518',
+        borderRadius: '16px',
+        padding: '1.5rem',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        cursor: 'pointer',
+        maxWidth: '320px'
+      }}
+      variants={{
+        hover: {
+          y: -8,
+          scale: 1.02,
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+          borderColor: 'rgba(255,255,255,0.15)',
+          transition: { duration: 0.3, ease: 'easeOut' }
+        }
+      }}
+      onClick={onViewMore}
     >
-      <div 
-        onClick={onBack}
-        style={{ width: '45px', height: '45px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', marginBottom: '2rem', transition: 'background 0.2s' }}
-        onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-        onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-      >
-        <ArrowLeft size={24} color="#fff" />
-      </div>
-
-      <div style={{ width: '100%', height: '400px', borderRadius: '16px', overflow: 'hidden', marginBottom: '2rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <img src={event.image} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      </div>
-
-      <h2 style={{ color: '#fff', fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.2 }}>{event.title}</h2>
-      <p style={{ color: '#888', fontSize: '1.1rem', marginBottom: '2.5rem' }}>Organized by {event.organizer}</p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Calendar size={24} color="#aaa" />
-          <div>
-            <p style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Date & Time</p>
-            <p style={{ color: '#ccc', fontSize: '1.05rem', fontWeight: 500 }}>{event.date}</p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <MapPin size={24} color="#aaa" />
-          <div>
-            <p style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Venue</p>
-            <p style={{ color: '#ccc', fontSize: '1.05rem', fontWeight: 500 }}>{event.venue}</p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '4rem' }}>
-         <motion.button 
-           onClick={onRegister}
-           whileHover={{ scale: 1.02, backgroundColor: '#eee' }}
-           whileTap={{ scale: 0.95 }}
-           style={{ background: '#fff', color: '#000', padding: '1rem 2rem', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '1rem' }}>
-             Register Now
-         </motion.button>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <div style={{ width: '4px', height: '24px', background: '#3b82f6', borderRadius: '4px' }}></div>
-        <h3 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 600 }}>About the Event</h3>
+      <div style={{ width: '100%', height: '180px', borderRadius: '12px', overflow: 'hidden', marginBottom: '1rem' }}>
+        <motion.img 
+          src={event.image} 
+          alt={event.title} 
+          variants={{
+            hover: { scale: 1.08, transition: { duration: 0.4, ease: 'easeOut' } }
+          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+        />
       </div>
       
-      <div style={{ color: '#aaa', lineHeight: 1.6, fontSize: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <p>This event is an amazing opportunity to connect, build solutions, and compete for exciting prizes. Registration is currently open!</p>
-        <p>Theme: AI Powered Excellence.<br/>Build AI-driven solutions for real-world challenges.</p>
-        <div>
-          <p style={{ color: '#fff', marginBottom: '0.5rem', fontWeight: 500 }}>🏆 Prizes:</p>
-          <ul style={{ listStyleType: 'none', padding: 0 }}>
-            <li>🥇 1st Prize: ₹75,000</li>
-            <li>🥈 2nd Prize: ₹50,000</li>
-          </ul>
-        </div>
-        <div>
-          <p style={{ color: '#fff', marginBottom: '0.5rem', fontWeight: 500 }}>📅 Important Dates:</p>
-          <ul style={{ paddingLeft: '1.5rem' }}>
-            <li>Registration Deadline: 14th March</li>
-            <li>Hackathon: 1st & 2nd April</li>
-          </ul>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-const RegisterView = ({ event, onBack }: any) => {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="events-main-section" 
-      style={{ padding: '8rem 6rem 4rem 6rem', maxWidth: '650px', margin: '0 auto', width: '100%' }}
-    >
-      <div 
-        onClick={onBack}
-        style={{ width: '45px', height: '45px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', marginBottom: '2rem', transition: 'background 0.2s' }}
-        onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-        onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-      >
-        <ArrowLeft size={24} color="#fff" />
+      <div style={{ marginBottom: '1rem' }}>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginBottom: '0.25rem', lineHeight: 1.3 }}>{event.title}</h3>
+        <p style={{ color: '#888', fontSize: '0.9rem' }}>By {event.organizer}</p>
       </div>
 
-      <h2 style={{ color: '#fff', fontSize: '2.2rem', fontWeight: 700, marginBottom: '2rem', lineHeight: 1.2 }}>{event.title}</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Calendar size={14} color="#aaa" />
+          <span style={{ color: '#ccc', fontSize: '0.8rem' }}>{event.date}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <MapPin size={14} color="#aaa" />
+          <span style={{ color: '#ccc', fontSize: '0.8rem' }}>{event.venue}</span>
+        </div>
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#fff', fontWeight: 500, fontSize: '0.95rem' }}>
-          <span>Full Name <span style={{ color: '#3b82f6' }}>*</span></span>
-          <input type="text" placeholder="Participant Name" style={{ background: '#121214', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', color: '#fff', outline: 'none', fontSize: '1rem' }} />
-        </label>
-        
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#fff', fontWeight: 500, fontSize: '0.95rem' }}>
-          <span>Email Address <span style={{ color: '#3b82f6' }}>*</span></span>
-          <input type="email" placeholder="Enter your email address" style={{ background: '#121214', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', color: '#fff', outline: 'none', fontSize: '1rem' }} />
-        </label>
-        
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#fff', fontWeight: 500, fontSize: '0.95rem' }}>
-          <span>Mobile Number <span style={{ color: '#3b82f6' }}>*</span></span>
-          <input type="text" placeholder="+91 12345-67890" style={{ background: '#121214', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', color: '#fff', outline: 'none', fontSize: '1rem' }} />
-        </label>
-        
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: '#fff', fontWeight: 500, fontSize: '0.95rem' }}>
-          <span>Team Name <span style={{ color: '#3b82f6' }}>*</span></span>
-          <input type="text" placeholder="Ex. PHOENIX" style={{ background: '#121214', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', color: '#fff', outline: 'none', fontSize: '1rem' }} />
-        </label>
+      <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <motion.button 
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); onRegister(); }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            background: '#3b82f6',
+            color: '#fff',
+            border: 'none',
+            padding: '0.6rem 1rem',
+            borderRadius: '8px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            flex: 1
+          }}
+        >
+          Register
+        </motion.button>
         
         <motion.button 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => { alert('Success! You have registered.'); onBack(); }}
-          style={{ background: '#fff', color: '#000', padding: '1rem', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', marginTop: '1rem', fontSize: '1.05rem' }}>
-          Register
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); onViewMore(); }}
+          whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.08)' }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            background: 'transparent',
+            color: '#aaa',
+            border: '1px solid rgba(255,255,255,0.1)',
+            padding: '0.6rem 1rem',
+            borderRadius: '8px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <MoreHorizontal size={16} />
         </motion.button>
       </div>
     </motion.div>
   );
-}
+};
+
+// ─── Event Details View ───────────────────────────────────────────────────────
+import { EventDetail, RegisterView } from '../components/SharedViews';
 
 export default function Events() {
   const [currentView, setCurrentView] = useState<'list' | 'details' | 'register'>('list');
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'timeline' | 'grid'>('timeline');
+  const [filterDate, setFilterDate] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+
+  const filteredEvents = events.filter(event => {
+    const matchDate = filterDate === 'all' || event.date.includes(filterDate);
+    const matchCategory = filterCategory === 'all' || event.category === filterCategory;
+    return matchDate && matchCategory;
+  });
 
   const handleViewMore = (event: any) => {
     setSelectedEvent(event);
@@ -328,7 +312,7 @@ export default function Events() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.4 }}
             className="events-main-section" 
-            style={{ padding: '8rem 6rem 4rem 6rem', display: 'flex', flexDirection: 'column', maxWidth: '1200px', margin: '0 auto' }}
+            style={{ padding: '8rem 6rem 4rem 6rem', display: 'flex', flexDirection: 'column', maxWidth: '1400px', margin: '0 auto' }}
           >
             <motion.h1 
               className="events-h1"
@@ -339,7 +323,7 @@ export default function Events() {
                 color: '#fff', 
                 fontSize: '3.5rem', 
                 fontWeight: 700, 
-                marginBottom: '3rem',
+                marginBottom: '2rem',
                 display: 'flex',
                 alignItems: 'baseline',
                 justifyContent: 'center'
@@ -354,43 +338,135 @@ export default function Events() {
               >.</motion.span>
             </motion.h1>
 
-            <div style={{ display: 'flex', gap: '4rem', width: '100%' }}>
-              {/* Left Timeline Section - Restored as requested */}
-              <div className="mobile-hidden" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100px' }}>
-                <div style={{
-                  background: 'transparent',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '20px',
-                  padding: '0.5rem 1.25rem',
-                  fontSize: '0.95rem',
-                  fontWeight: 500,
-                  marginBottom: '2rem',
-                  zIndex: 2
-                }}>
-                  Today
+            {/* Filters and View Toggle */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem', flexWrap: 'wrap', gap: '1rem' }}
+            >
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Filter size={16} color="#94a3b8" />
+                  <select
+                    value={filterDate}
+                    onChange={e => setFilterDate(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '8px', padding: '0.5rem 1rem', color: '#e2e8f0',
+                      fontSize: '0.85rem', outline: 'none'
+                    }}
+                  >
+                    <option value="all">All Dates</option>
+                    <option value="Oct">October</option>
+                    <option value="Nov">November</option>
+                  </select>
                 </div>
-                
-                <div style={{ position: 'relative', width: '2px', background: 'rgba(255,255,255,0.1)', flex: 1 }}>
-                   {events.map((_, index) => (
-                     <div key={index} style={{
-                       position: 'absolute',
-                       top: `calc(${index * 280}px + 60px)`, // Rough approximation
-                       left: '50%',
-                       transform: 'translateX(-50%)',
-                       width: '12px',
-                       height: '12px',
-                       background: '#fff',
-                       borderRadius: '50%',
-                       boxShadow: '0 0 0 4px #0a0a0c'
-                     }}></div>
-                   ))}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Category:</span>
+                  <select
+                    value={filterCategory}
+                    onChange={e => setFilterCategory(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '8px', padding: '0.5rem 1rem', color: '#e2e8f0',
+                      fontSize: '0.85rem', outline: 'none'
+                    }}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Music">Music</option>
+                  </select>
                 </div>
               </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', flex: 1, paddingBottom: '4rem' }}>
-                {events.map((event, index) => (
-                  <EventCard 
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <motion.button
+                  onClick={() => setViewMode('timeline')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{
+                    background: viewMode === 'timeline' ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${viewMode === 'timeline' ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: '8px', padding: '0.5rem', color: '#e2e8f0',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
+                  }}
+                >
+                  <List size={16} />
+                  Timeline
+                </motion.button>
+                <motion.button
+                  onClick={() => setViewMode('grid')}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{
+                    background: viewMode === 'grid' ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${viewMode === 'grid' ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: '8px', padding: '0.5rem', color: '#e2e8f0',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
+                  }}
+                >
+                  <Grid size={16} />
+                  Grid
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {viewMode === 'timeline' ? (
+              <div style={{ display: 'flex', gap: '4rem', width: '100%' }}>
+                {/* Left Timeline Section */}
+                <div className="mobile-hidden" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100px' }}>
+                  <div style={{
+                    background: 'transparent',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '20px',
+                    padding: '0.5rem 1.25rem',
+                    fontSize: '0.95rem',
+                    fontWeight: 500,
+                    marginBottom: '2rem',
+                    zIndex: 2
+                  }}>
+                    Today
+                  </div>
+                  
+                  <div style={{ position: 'relative', width: '2px', background: 'rgba(255,255,255,0.1)', flex: 1 }}>
+                     {filteredEvents.map((_, index) => (
+                       <div key={index} style={{
+                         position: 'absolute',
+                         top: `calc(${index * 280}px + 60px)`,
+                         left: '50%',
+                         transform: 'translateX(-50%)',
+                         width: '12px',
+                         height: '12px',
+                         background: '#3b82f6',
+                         borderRadius: '50%',
+                         boxShadow: '0 0 0 4px #0a0a0c'
+                       }}></div>
+                     ))}
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', flex: 1, paddingBottom: '4rem' }}>
+                  {filteredEvents.map((event, index) => (
+                    <EventCard 
+                      key={event.id} 
+                      event={event} 
+                      index={index} 
+                      onViewMore={() => handleViewMore(event)}
+                      onRegister={() => handleRegister(event)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem', paddingBottom: '4rem' }}
+              >
+                {filteredEvents.map((event, index) => (
+                  <GridEventCard 
                     key={event.id} 
                     event={event} 
                     index={index} 
@@ -398,13 +474,13 @@ export default function Events() {
                     onRegister={() => handleRegister(event)} 
                   />
                 ))}
-              </div>
-            </div>
+              </motion.div>
+            )}
           </motion.main>
         )}
 
         {currentView === 'details' && selectedEvent && (
-          <EventDetails key="details" event={selectedEvent} onBack={handleBack} onRegister={() => handleRegister(selectedEvent)} />
+          <EventDetail key="details" event={selectedEvent} onBack={handleBack} onRegister={() => handleRegister(selectedEvent)} />
         )}
 
         {currentView === 'register' && selectedEvent && (

@@ -140,7 +140,7 @@ html.lenis {
     display: none !important;
   }
   .events-main-section {
-    padding: 2rem 1.5rem !important;
+    padding: 6rem 1rem 4rem 1rem !important;
   }
   .events-h1 {
     font-size: 2.5rem !important;
@@ -149,6 +149,47 @@ html.lenis {
   .events-dot {
     font-size: 3rem !important;
   }
+  
+  /* SharedViews Responsive Classes */
+  .sv-padding {
+    padding: 5rem 1rem 4rem 1rem !important;
+  }
+  .sv-hero-image {
+    height: 300px !important;
+  }
+  .sv-hero-content {
+    padding: 2rem 1.5rem 1.5rem 1.5rem !important;
+  }
+  .sv-hero-title {
+    font-size: 2.2rem !important;
+  }
+  .sv-main-content-gap {
+    gap: 2rem !important;
+  }
+  .sv-cta-card {
+    position: relative !important;
+    top: 0 !important;
+    width: 100% !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+  }
+  .sv-form-padding {
+    padding: 2rem 1.25rem !important;
+  }
+  
+  /* Discover Page Overrides */
+  .discover-padding {
+    padding: 6rem 1rem 4rem 1rem !important;
+  }
+  .discover-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 @media (max-width: 768px) { .mobile-hidden { display: none !important; } }
+
+/* Auth page specific */
+@media (min-width: 1024px) {
+  .auth-left-panel {
+    display: flex !important;
+  }
+}

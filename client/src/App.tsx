@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Events from './pages/Events';
+import Discover from './pages/Discover';
+import Auth from './pages/Auth';
 import './index.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -26,7 +28,7 @@ function App() {
 
   useEffect(() => {
     // Only initialize Lenis and GSAP ScrollTrigger on the Home route
-    if (currentRoute === '#events') {
+    if (currentRoute === '#events' || currentRoute === '#discover' || currentRoute === '#signin') {
        // Revert body styles that might have been applied by GSAP
        document.body.style.backgroundColor = '';
        document.body.style.color = '';
@@ -37,12 +39,6 @@ function App() {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      direction: 'vertical',
-      gestureDirection: 'vertical',
-      smooth: true,
-      mouseMultiplier: 1,
-      smoothTouch: false,
-      touchMultiplier: 2,
       infinite: false,
     });
 
@@ -82,8 +78,16 @@ function App() {
     };
   }, [currentRoute]);
 
+  if (currentRoute === '#discover') {
+    return <Discover />;
+  }
+
   if (currentRoute === '#events') {
     return <Events />;
+  }
+
+  if (currentRoute === '#signin') {
+    return <Auth />;
   }
 
   return (
