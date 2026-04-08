@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Calendar, MapPin, MoreHorizontal, Grid, List, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/Navbar';
+
 import '../index.css';
 
 const events = [
@@ -12,7 +12,8 @@ const events = [
     date: 'Oct 12, 2024 • 9:00 AM PST',
     venue: 'Moscone Center, SF / Hybrid',
     image: '/event1.png',
-    category: 'Tech'
+    category: 'Tech',
+    isMyEvent: true
   },
   {
     id: 2,
@@ -21,16 +22,18 @@ const events = [
     date: 'Oct 12, 2024 • 9:00 AM PST',
     venue: 'Moscone Center, SF / Hybrid',
     image: '/event2.png',
-    category: 'Music'
+    category: 'Music',
+    isMyEvent: false
   },
   {
     id: 3,
-    title: 'National Healthcare Hackathon 2.0',
-    organizer: 'JECRC University',
-    date: 'Oct 12, 2024 • 9:00 AM PST',
-    venue: 'Moscone Center, SF / Hybrid',
+    title: 'Code Sparks: Intro to Python',
+    organizer: 'Tech Innovators',
+    date: 'Oct 15, 2024 • 11:00 AM PST',
+    venue: 'Virtual',
     image: '/event1.png',
-    category: 'Tech'
+    category: 'Tech',
+    isMyEvent: true
   }
 ];
 
@@ -259,7 +262,7 @@ const GridEventCard = ({ event, index, onViewMore, onRegister }: { event: any, i
 // ─── Event Details View ───────────────────────────────────────────────────────
 import { EventDetail, RegisterView } from '../components/SharedViews';
 
-export default function Events() {
+export default function Events({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [currentView, setCurrentView] = useState<'list' | 'details' | 'register'>('list');
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'grid'>('timeline');
@@ -270,6 +273,10 @@ export default function Events() {
     const matchDate = filterDate === 'all' || event.date.includes(filterDate);
     const matchCategory = filterCategory === 'all' || event.category === filterCategory;
     return matchDate && matchCategory;
+  }).sort((a: any, b: any) => {
+    if (a.isMyEvent && !b.isMyEvent) return -1;
+    if (!a.isMyEvent && b.isMyEvent) return 1;
+    return 0;
   });
 
   const handleViewMore = (event: any) => {
@@ -301,7 +308,7 @@ export default function Events() {
       fontFamily: "'Outfit', sans-serif",
       overflowX: 'hidden'
     }}>
-      <Navbar />
+
 
       <AnimatePresence mode="wait">
         {currentView === 'list' && (
@@ -487,6 +494,49 @@ export default function Events() {
           <RegisterView key="register" event={selectedEvent} onBack={handleBack} />
         )}
       </AnimatePresence>
+
+      {/* Auth Blur Overlay */}
+      {!isLoggedIn && currentView === 'list' && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '100vh',
+          background: 'linear-gradient(to top, #09090b 40%, rgba(9,9,11,0.7) 70%, transparent 100%)',
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'all',
+          backdropFilter: 'blur(6px)',
+          paddingTop: '30vh'
+        }}>
+          <div style={{ textAlign: 'center', maxWidth: '450px', padding: '2rem' }}>
+            <h2 style={{ color: '#fff', fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.25rem' }}>The best events, just for you.</h2>
+            <p style={{ color: '#94a3b8', fontSize: '1.1rem', marginBottom: '2.5rem' }}>Sign in to see full event details, register for workshops, and track your campus life.</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { window.location.hash = '#signin'; }}
+              style={{
+                background: '#fff',
+                color: '#000',
+                border: 'none',
+                padding: '1.25rem 3rem',
+                borderRadius: '50px',
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                cursor: 'pointer',
+                boxShadow: '0 15px 35px rgba(255,255,255,0.1)'
+              }}
+            >
+              Login to view more
+            </motion.button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

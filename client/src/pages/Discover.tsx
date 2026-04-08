@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { MapPin, Search, X, Sparkles, TrendingUp, Clock, Filter, Star } from 'lucide-react';
-import Navbar from '../components/Navbar';
+
 import { EventDetail, RegisterView } from '../components/SharedViews';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ const DiscoverCard = ({ event, index, onClick }: { event: any; index: number; on
 // Event Detail string is now removed since it's imported.
 
 // ─── Main Discover Page ───────────────────────────────────────────────────────
-export default function Discover() {
+export default function Discover({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [currentView, setCurrentView] = useState<'grid' | 'details' | 'register'>('grid');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -305,7 +305,7 @@ export default function Discover() {
         backgroundSize: '60px 60px',
       }} />
 
-      <Navbar />
+
 
       <AnimatePresence mode="wait">
         {currentView === 'details' && selectedEvent ? (
@@ -519,7 +519,17 @@ export default function Discover() {
                 >
                   {filteredEvents.map((event, index) => (
                     <motion.div key={event.id} layout exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}>
-                      <DiscoverCard event={event} index={index} onClick={() => handleEventClick(event)} />
+                      <DiscoverCard 
+                        event={event} 
+                        index={index} 
+                        onClick={() => {
+                          if (!isLoggedIn) {
+                            window.location.hash = '#signin';
+                            return;
+                          }
+                          handleEventClick(event);
+                        }} 
+                      />
                     </motion.div>
                   ))}
                 </motion.div>
@@ -535,6 +545,49 @@ export default function Discover() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Auth Blur Overlay */}
+            {!isLoggedIn && (
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '70%',
+                background: 'linear-gradient(to top, #08080c 40%, rgba(8,8,12,0.8) 70%, transparent 100%)',
+                zIndex: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingTop: '20vh',
+                pointerEvents: 'all',
+                backdropFilter: 'blur(4px)'
+              }}>
+                <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
+                  <h2 style={{ color: '#fff', fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>Want to see more?</h2>
+                  <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Login to explore thousands of college events and find your next vibe.</p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { window.location.hash = '#signin'; }}
+                    style={{
+                      background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '1rem 2.5rem',
+                      borderRadius: '30px',
+                      fontWeight: 700,
+                      fontSize: '1.1rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 10px 25px rgba(139,92,246,0.3)'
+                    }}
+                  >
+                    Login to view more
+                  </motion.button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

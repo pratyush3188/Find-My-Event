@@ -1,20 +1,72 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mail, Lock, User } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, Check, Loader2, Camera, Sparkles } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+interface AuthProps {}
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.6, staggerChildren: 0.1 } },
-    exit: { opacity: 0, transition: { duration: 0.4 } }
+type AuthStep = 'login' | 'signup' | 'otp' | 'profile' | 'welcome';
+
+const Auth: React.FC<AuthProps> = () => {
+  const [step, setStep] = useState<AuthStep>('login');
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', otp: '' });
+  const [profileData, setProfileData] = useState({ bio: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { register, verifyOtp, handleLogin, setupProfile } = useAuth();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      if (step === 'login') {
+        await handleLogin(formData.email, formData.password);
+        window.location.hash = '#home';
+      } else if (step === 'signup') {
+        await register(formData.name, formData.email, formData.password);
+        setStep('otp');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Something went wrong');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await verifyOtp(formData.email, formData.otp);
+      setStep('profile');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid OTP');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await setupProfile(profileData.bio, profileData.avatar);
+      setStep('welcome');
+      setTimeout(() => {
+        window.location.hash = '#home';
+      }, 3000);
+    } catch (err) {
+      setError('Failed to setup profile');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const GoogleIcon = () => (
@@ -28,59 +80,28 @@ const Auth = () => {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#f8f9fa', position: 'relative', overflow: 'hidden' }}>
-      {/* Decorative Elements */}
+      {/* Decorative dot grid */}
       <div className="dot-grid"></div>
       
       {/* Back to Home Button */}
-      <motion.a 
-        href="#home"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.5 }}
-        style={{
-          position: 'absolute',
-          top: '2rem',
-          left: '2rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          textDecoration: 'none',
-          color: '#1a1a1a',
-          fontWeight: 500,
-          zIndex: 10,
-          background: 'rgba(255, 255, 255, 0.5)',
-          padding: '0.5rem 1rem',
-          borderRadius: '999px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(0,0,0,0.05)'
-        }}
-      >
-        <ArrowLeft size={18} />
-        Back
-      </motion.a>
+      {step !== 'welcome' && (
+        <motion.a 
+          href="#home"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          style={{ position: 'absolute', top: '2rem', left: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#1a1a1a', fontWeight: 500, zIndex: 100, background: 'rgba(255, 255, 255, 0.5)', padding: '0.5rem 1rem', borderRadius: '999px', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,0,0,0.05)' }}
+        >
+          <ArrowLeft size={18} />
+          Back
+        </motion.a>
+      )}
 
-      {/* Left Section - Graphic / Branding */}
+      {/* Left Section - Branding (Old UI style) */}
       <div 
-        style={{
-          flex: 1,
-          display: 'none', 
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '4rem',
-          position: 'relative',
-          backgroundColor: '#111',
-          color: 'white',
-          borderTopRightRadius: '3rem',
-          borderBottomRightRadius: '3rem',
-        }}
+        style={{ flex: 1, display: 'none', flexDirection: 'column', justifyContent: 'center', padding: '4rem', position: 'relative', backgroundColor: '#111', color: 'white', borderTopRightRadius: '3rem', borderBottomRightRadius: '3rem' }}
         className="auth-left-panel"
       >
-        {/* We can expose this on desktop via CSS */}
-        <motion.div
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.8, delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}>
           <h1 style={{ fontSize: 'clamp(3rem, 5vw, 4rem)', lineHeight: 1.1, marginBottom: '1.5rem' }}>
             Discover the <br />
             <span className="serif-italic" style={{ color: '#ff6f3f' }}>best events</span> <br />
@@ -90,259 +111,212 @@ const Auth = () => {
             Join our community to explore, register, and experience unforgettable moments just one search away.
           </p>
         </motion.div>
-        
-        {/* Background abstract shapes */}
-        <div style={{
-          position: 'absolute',
-          top: '-10%',
-          right: '-10%',
-          width: '500px',
-          height: '500px',
-          background: 'radial-gradient(circle, rgba(255,111,63,0.15) 0%, transparent 70%)',
-          borderRadius: '50%',
-          pointerEvents: 'none'
-        }} />
+        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(255,111,63,0.15) 0%, transparent 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
       </div>
 
-      {/* Right Section - Form */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
-      }}>
+      {/* Right Section - Form (Reverted to old aesthetic but with new logic) */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <div style={{ width: '100%', maxWidth: '440px' }}>
           
           <AnimatePresence mode="wait">
-            <motion.div
-              key={isLogin ? 'login' : 'signup'}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <motion.div variants={itemVariants} style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
-                  {isLogin ? 'Welcome back' : 'Create an account'}
-                </h2>
-                <p style={{ color: '#666', fontSize: '1rem' }}>
-                  {isLogin ? 'Enter your details to access your account' : 'Sign up to start discovering events'}
-                </p>
+            {step === 'welcome' ? (
+              <motion.div key="welcome" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ textAlign: 'center' }}>
+                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }} style={{ width: '120px', height: '120px', borderRadius: '50%', margin: '0 auto 2rem', border: '4px solid #ff6f3f', padding: '5px', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                   <img src={profileData.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                 </motion.div>
+                 <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1a1a1a' }}>Hello, {formData.name.split(' ')[0]}</h1>
+                 <p style={{ opacity: 0.6, marginTop: '1rem', fontSize: '1.1rem', color: '#666' }}>Your account is ready. Redirecting you home...</p>
+                 <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', color: '#ff6f3f' }}>
+                    <Check size={24} />
+                    <span style={{ fontWeight: 600 }}>Profile Created!</span>
+                 </div>
               </motion.div>
+            ) : (
+              <motion.div 
+                key={step}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+                  <h2 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', letterSpacing: '-0.03em', color: '#1a1a1a' }}>
+                    {step === 'login' && 'Welcome back'}
+                    {step === 'signup' && 'Create an account'}
+                    {step === 'otp' && 'Enter Code'}
+                    {step === 'profile' && 'Set up Your Profile'}
+                  </h2>
+                  <p style={{ color: '#666', fontSize: '1rem' }}>
+                    {step === 'login' && 'Enter your details to access your account'}
+                    {step === 'signup' && 'Sign up to start discovering events'}
+                    {step === 'otp' && `Please enter the 6-digit code we sent to ${formData.email}`}
+                    {step === 'profile' && 'Add a name, photo and short bio'}
+                  </p>
+                </div>
 
-              <motion.div variants={itemVariants} style={{ marginBottom: '2rem' }}>
-                <button style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.75rem',
-                  backgroundColor: 'white',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  color: '#1a1a1a',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f3f4f6';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-                >
-                  <GoogleIcon />
-                  {isLogin ? 'Log in with Google' : 'Sign up with Google'}
-                </button>
-              </motion.div>
-
-              <motion.div variants={itemVariants} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '1rem',
-                margin: '1.5rem 0'
-              }}>
-                <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,0.1)' }}></div>
-                <span style={{ fontSize: '0.875rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with</span>
-                <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,0.1)' }}></div>
-              </motion.div>
-
-              <form onSubmit={(e) => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                
-                {!isLogin && (
-                  <motion.div variants={itemVariants}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#1a1a1a' }}>
-                      Full Name
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <User size={18} color="#888" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                      <input 
-                        type="text" 
-                        placeholder="John Doe"
-                        style={{
-                          width: '100%',
-                          padding: '0.875rem 1rem 0.875rem 2.75rem',
-                          borderRadius: '12px',
-                          border: '1px solid rgba(0,0,0,0.1)',
-                          backgroundColor: 'rgba(255,255,255,0.8)',
-                          fontSize: '1rem',
-                          outline: 'none',
-                          transition: 'border-color 0.2s, box-shadow 0.2s',
-                          fontFamily: 'inherit'
-                        }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = '#ff6f3f';
-                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,111,63,0.1)';
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                      />
-                    </div>
+                {error && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', padding: '0.875rem', borderRadius: '12px', fontSize: '0.875rem', marginBottom: '1.5rem', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                    {error}
                   </motion.div>
                 )}
 
-                <motion.div variants={itemVariants}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#1a1a1a' }}>
-                    Email Address
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <Mail size={18} color="#888" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                    <input 
-                      type="email" 
-                      placeholder="you@university.edu"
-                      style={{
-                        width: '100%',
-                        padding: '0.875rem 1rem 0.875rem 2.75rem',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(0,0,0,0.1)',
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'border-color 0.2s, box-shadow 0.2s',
-                        fontFamily: 'inherit'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = '#ff6f3f';
-                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,111,63,0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-                </motion.div>
+                {(step === 'login' || step === 'signup') && (
+                  <>
+                    <button style={{ width: '100%', padding: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', backgroundColor: 'white', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', fontSize: '1rem', fontWeight: 500, color: '#1a1a1a', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }} onClick={() => {}}>
+                      <GoogleIcon />
+                      {step === 'login' ? 'Log in with Google' : 'Sign up with Google'}
+                    </button>
 
-                <motion.div variants={itemVariants}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#1a1a1a' }}>
-                      Password
-                    </label>
-                    {isLogin && (
-                      <a href="#" style={{ fontSize: '0.875rem', color: '#ff6f3f', textDecoration: 'none', fontWeight: 500 }}>
-                        Forgot password?
-                      </a>
-                    )}
-                  </div>
-                  <div style={{ position: 'relative' }}>
-                    <Lock size={18} color="#888" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                    <input 
-                      type="password" 
-                      placeholder="••••••••"
-                      style={{
-                        width: '100%',
-                        padding: '0.875rem 1rem 0.875rem 2.75rem',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(0,0,0,0.1)',
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'border-color 0.2s, box-shadow 0.2s',
-                        fontFamily: 'inherit'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = '#ff6f3f';
-                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,111,63,0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-                </motion.div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,0.1)' }}></div>
+                      <span style={{ fontSize: '0.875rem', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or</span>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(0,0,0,0.1)' }}></div>
+                    </div>
 
-                <motion.div variants={itemVariants} style={{ marginTop: '0.5rem' }}>
-                  <button 
-                    type="submit"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem',
-                      backgroundColor: '#ff6f3f',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 14px rgba(255,111,63,0.3)',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = '#e55a2b';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,111,63,0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = '#ff6f3f';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 14px rgba(255,111,63,0.3)';
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {isLogin ? 'Sign In' : 'Create Account'}
-                  </button>
-                </motion.div>
-                
-              </form>
+                    <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                      {step === 'signup' && (
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#1a1a1a' }}>Full Name</label>
+                          <div style={{ position: 'relative' }}>
+                            <User size={18} color="#888" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                            <input name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required className="auth-input-old" />
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#1a1a1a' }}>Email Address</label>
+                        <div style={{ position: 'relative' }}>
+                          <Mail size={18} color="#888" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="you@university.edu" required className="auth-input-old" />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#1a1a1a' }}>Password</label>
+                        <div style={{ position: 'relative' }}>
+                          <Lock size={18} color="#888" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required className="auth-input-old" />
+                        </div>
+                      </div>
+                      <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} disabled={isSubmitting} className="auth-btn-old">
+                        {isSubmitting ? <Loader2 className="spin" size={20} /> : (step === 'login' ? 'Sign In' : 'Create Account')}
+                      </motion.button>
+                    </form>
+                  </>
+                )}
 
-              <motion.div variants={itemVariants} style={{ marginTop: '2rem', textAlign: 'center' }}>
-                <p style={{ color: '#666', fontSize: '0.95rem' }}>
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
-                  <button 
-                    onClick={() => setIsLogin(!isLogin)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#ff6f3f',
-                      fontWeight: 600,
-                      fontSize: '0.95rem',
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      padding: 0
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
-                    onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
-                  >
-                    {isLogin ? 'Sign up' : 'Log in'}
-                  </button>
-                </p>
+                {step === 'otp' && (
+                  <form onSubmit={handleOtpVerify}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                      <input 
+                        type="text" 
+                        maxLength={6} 
+                        value={formData.otp} 
+                        onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                        placeholder="000000"
+                        style={{ width: '100%', textAlign: 'center', letterSpacing: '0.8rem', fontSize: '1.5rem', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1a1a', padding: '1rem', borderRadius: '12px', outline: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
+                      />
+                    </div>
+                    <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} disabled={isSubmitting} className="auth-btn-old">
+                      {isSubmitting ? <Loader2 className="spin" size={20} /> : 'Verify Code'}
+                    </motion.button>
+                  </form>
+                )}
+
+                {step === 'profile' && (
+                  <form onSubmit={handleProfileSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', marginBottom: '1rem' }}>
+                      <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: '2px solid #ff6f3f', padding: '5px', background: 'white', position: 'relative', boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}>
+                        <img src={profileData.avatar} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                        <div style={{ position: 'absolute', bottom: 0, right: 0, background: '#ff6f3f', padding: '6px', borderRadius: '50%', border: '2px solid #fff', color: 'white' }}>
+                          <Camera size={14} />
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                      {['Felix', 'Anya'].map((seed) => (
+                        <div 
+                          key={seed}
+                          onClick={() => setProfileData({ ...profileData, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}` })}
+                          style={{ width: '50px', height: '50px', borderRadius: '50%', border: profileData.avatar.includes(seed) ? '2px solid #ff6f3f' : '2px solid transparent', cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#1a1a1a' }}>Bio</label>
+                      <textarea 
+                        value={profileData.bio}
+                        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                        placeholder="I love college festivals!"
+                        style={{ width: '100%', minHeight: '100px', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem', color: '#1a1a1a', resize: 'none', outline: 'none' }}
+                      />
+                    </div>
+                    <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} disabled={isSubmitting} className="auth-btn-old">
+                      {isSubmitting ? <Loader2 className="spin" size={20} /> : 'Let\'s GO'}
+                    </motion.button>
+                  </form>
+                )}
+
+                {(step === 'login' || step === 'signup') && (
+                  <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                    <p style={{ color: '#666', fontSize: '0.95rem' }}>
+                      {step === 'login' ? "Don't have an account? " : "Already have an account? "}
+                      <button onClick={() => setStep(step === 'login' ? 'signup' : 'login')} style={{ background: 'none', border: 'none', color: '#ff6f3f', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>
+                        {step === 'login' ? 'Sign up' : 'Log in'}
+                      </button>
+                    </p>
+                  </div>
+                )}
               </motion.div>
-
-            </motion.div>
+            )}
           </AnimatePresence>
 
         </div>
       </div>
+
+      <style>{`
+        .auth-input-old {
+          width: 100%;
+          padding: 0.875rem 1rem 0.875rem 2.75rem;
+          border-radius: 12px;
+          border: 1px solid rgba(0,0,0,0.1);
+          background-color: rgba(255,255,255,0.8);
+          font-size: 1rem;
+          outline: none;
+          transition: all 0.2s;
+        }
+        .auth-input-old:focus {
+          border-color: #ff6f3f;
+          box-shadow: 0 0 0 3px rgba(255,111,63,0.1);
+        }
+        .auth-btn-old {
+          width: 100%;
+          padding: 0.875rem;
+          background-color: #ff6f3f;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 1rem;
+          fontWeight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          box-shadow: 0 4px 14px rgba(255,111,63,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .auth-btn-old:hover {
+          background-color: #e55a2b;
+          transform: translateY(-1px);
+        }
+        .spin { animation: spin-anim 1s linear infinite; }
+        @keyframes spin-anim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        @media (min-width: 1024px) {
+          .auth-left-panel { display: flex !important; }
+        }
+      `}</style>
     </div>
   );
 };
