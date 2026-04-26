@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const EventSubmission = require('../models/EventSubmission');
 const Notification = require('../models/Notification');
+const PaidEventDetail = require('../models/PaidEventDetail');
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/admin/users
@@ -43,6 +44,21 @@ router.post('/events', protect, admin, upload.single('image'), async (req, res) 
     });
 
     const savedEvent = await event.save();
+
+    // Handle Paid Event Details for Admin events
+    if (req.body.isPaid === 'true') {
+      await PaidEventDetail.create({
+        event: savedEvent._id,
+        eventModel: 'Event',
+        ticketPrice: Number(req.body.ticketPrice) || 0,
+        ticketCapacity: Number(req.body.ticketCapacity) || Number(seats) || 1,
+        maxTicketsPerUser: Number(req.body.maxTicketsPerUser) || 1,
+        isRefundable: req.body.isRefundable === 'true',
+        paymentDescription: req.body.paymentDescription || '',
+        entryConditions: req.body.entryConditions || ''
+      });
+    }
+
     res.status(201).json(savedEvent);
   } catch (error) {
     res.status(500).json({ message: error.message });
