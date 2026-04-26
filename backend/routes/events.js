@@ -4,18 +4,28 @@ const router = express.Router();
 const Event = require('../models/Event');
 const EventSubmission = require('../models/EventSubmission');
 const { protect } = require('../middleware/authMiddleware');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { softAuth, requireAuth, requireAdmin } = require('../middleware/auth');
 const { upload } = require('../config/cloudinary');
+const PaidEventDetail = require('../models/PaidEventDetail');
 
 // === Event Submission Routes (HEAD) ===
 
-router.get('/approved', async (req, res) => {
+router.get('/approved', softAuth, async (req, res) => {
   try {
     const list = await EventSubmission.find({ status: 'approved', withdrawalStatus: { $ne: 'approved' } })
       .populate('organizer', 'name')
       .sort({ createdAt: -1 })
       .lean();
-    res.json(list);
+
+    // Attach pricing details and check registration for each approved submission
+    const listWithPricing = await Promise.all(list.map(async (event) => {
+      const pricing = await PaidEventDetail.findOne({ event: event._id }).lean();
+      if (pricing) pricing.isPaid = true;
+      const isRegistered = req.user ? event.registeredUsers?.some(id => id.toString() === req.user._id.toString()) : false;
+      return { ...event, pricing, isRegistered };
+    }));
+
+    res.json(listWithPricing);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -203,6 +213,21 @@ router.post('/', requireAuth, upload.single('image'), async (req, res) => {
       imageUrl: finalImageUrl,
       status: 'pending',
     });
+
+    // Handle Paid Event Details
+    if (req.body.isPaid === 'true') {
+      await PaidEventDetail.create({
+        event: submission._id,
+        eventModel: 'EventSubmission',
+        ticketPrice: Number(req.body.ticketPrice) || 0,
+        ticketCapacity: Number(req.body.ticketCapacity) || Number(capacity) || 1,
+        maxTicketsPerUser: Number(req.body.maxTicketsPerUser) || 1,
+        isRefundable: req.body.isRefundable === 'true',
+        paymentDescription: req.body.paymentDescription || '',
+        entryConditions: req.body.entryConditions || ''
+      });
+    }
+
     res.status(201).json({ submission });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -213,10 +238,18 @@ router.post('/', requireAuth, upload.single('image'), async (req, res) => {
 
 // @desc    Get all events
 // @route   GET /api/events
-router.get('/', async (req, res) => {
+router.get('/', softAuth, async (req, res) => {
   try {
-    const events = await Event.find({}).sort({ date: 1 });
-    res.json(events);
+    const events = await Event.find({}).sort({ date: 1 }).lean();
+    
+    const eventsWithPricing = await Promise.all(events.map(async (event) => {
+      const pricing = await PaidEventDetail.findOne({ event: event._id }).lean();
+      if (pricing) pricing.isPaid = true;
+      const isRegistered = req.user ? event.registeredUsers?.some(id => id.toString() === req.user._id.toString()) : false;
+      return { ...event, pricing, isRegistered };
+    }));
+
+    res.json(eventsWithPricing);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -229,16 +262,25 @@ router.get('/registered', requireAuth, async (req, res) => {
     const events = await Event.find({ registeredUsers: req.user._id }).lean();
     const submissions = await EventSubmission.find({ registeredUsers: req.user._id }).lean();
     
-    // Normalize format
-    const mappedSubmissions = submissions.map(s => ({
-      ...s,
-      date: s.startDate,
-      venue: s.location,
-      image: s.imageUrl,
-      category: s.category || 'Special'
+    // Normalize format and add pricing
+    const mappedSubmissions = await Promise.all(submissions.map(async (s) => {
+      const pricing = await PaidEventDetail.findOne({ event: s._id }).lean();
+      return {
+        ...s,
+        date: s.startDate,
+        venue: s.location,
+        image: s.imageUrl,
+        category: s.category || 'Special',
+        pricing
+      };
     }));
 
-    const combined = [...events, ...mappedSubmissions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const eventsWithPricing = await Promise.all(events.map(async (e) => {
+      const pricing = await PaidEventDetail.findOne({ event: e._id }).lean();
+      return { ...e, pricing };
+    }));
+
+    const combined = [...eventsWithPricing, ...mappedSubmissions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(combined);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -247,10 +289,28 @@ router.get('/registered', requireAuth, async (req, res) => {
 
 // @desc    Get single event
 // @route   GET /api/events/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', softAuth, async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    let eventModel = 'Event';
+    let event = await Event.findById(req.params.id).lean();
+    
+    if (!event) {
+      event = await EventSubmission.findById(req.params.id).lean();
+      eventModel = 'EventSubmission';
+    }
+
     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Fetch Paid details if any
+    const pricing = await PaidEventDetail.findOne({ event: event._id }).lean();
+    if (pricing) {
+      pricing.isPaid = true;
+      event.pricing = pricing;
+    }
+
+    // Check registration status
+    event.isRegistered = req.user ? event.registeredUsers?.some(id => id.toString() === req.user._id.toString()) : false;
+
     res.json(event);
   } catch (error) {
     res.status(500).json({ message: error.message });
