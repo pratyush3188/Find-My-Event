@@ -181,8 +181,8 @@ export const EventDetail = ({ event, onBack, onRegister }: { event: any, onBack:
                About This Event
             </h3>
             <div style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.8 }}>
-               <p style={{ marginBottom: '1.5rem' }}>
-                 Prepare to elevate your experience! Join us for a breathtaking immersion into {event?.category?.toLowerCase() || 'this field'}, brought to you by {event?.organizer || 'the best'}. Expect dynamic showcases, brilliant insights, and networking that fuels innovation.
+               <p style={{ marginBottom: '1.5rem', whiteSpace: 'pre-wrap' }}>
+                 {event?.description || `Prepare to elevate your experience! Join us for a breathtaking immersion into ${event?.category?.toLowerCase() || 'this field'}, brought to you by ${event?.organizer || 'the best'}. Expect dynamic showcases, brilliant insights, and networking that fuels innovation.`}
                </p>
                <div style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--border-subtle)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem' }}>
                   <h4 style={{ color: 'var(--text-primary)', fontSize: '1.2rem', marginBottom: '1rem', fontWeight: 600 }}>🌟 Event Highlights</h4>

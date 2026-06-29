@@ -32,16 +32,7 @@ const TagBadge = ({ tag }: { tag: string }) => {
   );
 };
 
-const allEvents = [
-  { id: 1, title: 'Indie Night: Live Bands & Open Mic', organizer: 'JECRC Music Club', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event1.png', category: 'Music', price: 'Free', seats: '69/100', tag: 'Trending' },
-  { id: 2, title: 'EDM Blast Fest 2026', organizer: 'Hukum Productions', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event2.png', category: 'Music', price: 'Free', seats: '69/100', tag: 'Hot' },
-  { id: 3, title: 'Udaipur World Music Festival', organizer: 'City Palace Events', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event1.png', category: 'Music', price: 'Free', seats: '69/100', tag: '' },
-  { id: 4, title: 'Bollywood Beats DJ Party', organizer: 'Club Rhythm', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event2.png', category: 'Gaming', price: 'Free', seats: '69/100', tag: 'New' },
-  { id: 5, title: "It's all a DREAM, Karan Aujla India Tour", organizer: 'BookMyShow Live', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event1.png', category: 'Music', price: 'Free', seats: '69/100', tag: '' },
-  { id: 6, title: 'Hukum Live in USA, Diljeet', organizer: 'International Shows', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event2.png', category: 'Dance', price: 'Free', seats: '69/100', tag: 'Hot' },
-  { id: 7, title: 'Acoustic Vibes: Coffee & Music', organizer: 'Café Culture Events', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event1.png', category: 'Music', price: 'Free', seats: '69/100', tag: '' },
-  { id: 8, title: 'Jaana Samjho Na, Aditya Rikhari India Tour 2026', organizer: 'Live Nation India', date: 'Sat, Feb 14 • 4:45 am', venue: 'Jaipur, Rajasthan', image: '/event2.png', category: 'Tech', price: 'Free', seats: '69/100', tag: 'Trending' },
-];
+const allEvents: any[] = [];
 
 const categories = ['All', 'Music', 'Gaming', 'Tech', 'Dance', 'Drama', 'Academics', 'Workshops', 'Culture'];
 
@@ -243,12 +234,51 @@ export default function Discover({ isLoggedIn: propIsLoggedIn }: { isLoggedIn?: 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    api.get<ApiApproved[]>('/events/approved')
-      .then(({ data }) => {
-        if (!cancelled && Array.isArray(data)) setApprovedFromApi(data.map(mapApprovedToCard));
+    
+    Promise.all([
+      api.get('/events/approved'),
+      api.get('/events')
+    ])
+      .then(([approvedRes, eventsRes]) => {
+        if (!cancelled) {
+          const approvedData = Array.isArray(approvedRes.data) ? approvedRes.data.map((s: any) => ({
+            id: `api-${s._id}`,
+            _id: s._id,
+            title: s.title,
+            organizer: s.organizer?.name || 'Campus host',
+            date: (s.startDate && s.endDate) ? `${s.startDate} → ${s.endDate}` : (s.startDate || s.date || 'TBD'),
+            venue: s.location ? `${s.location} · ${s.mode || 'Venue'}` : (s.venue || 'TBD'),
+            image: s.imageUrl || '/event1.png',
+            category: s.category || 'Culture',
+            price: s.pricing ? `₹${s.pricing.ticketPrice}` : 'Free',
+            seats: s.capacity ? `${Math.min(12, s.capacity)}/${s.capacity}` : 'Open',
+            tag: s.tag || 'New',
+            isRegistered: s.isRegistered ?? false,
+            pricing: s.pricing || null,
+          })) : [];
+          
+          const eventsData = Array.isArray(eventsRes.data) ? eventsRes.data.map((s: any) => ({
+            id: `api-evt-${s._id}`,
+            _id: s._id,
+            title: s.title,
+            organizer: s.organizer?.name || s.organizer || 'Host',
+            date: s.date || 'TBD',
+            venue: s.venue || 'TBD',
+            image: s.image || '/event1.png',
+            category: s.category || 'Tech',
+            price: s.price || 'Free',
+            seats: s.seats || 'Open',
+            tag: s.tag || '',
+            isRegistered: false,
+            pricing: s.pricing || null,
+          })) : [];
+
+          setApprovedFromApi([...approvedData, ...eventsData]);
+        }
       })
       .catch((err) => console.error('Discover fetch failed:', err))
       .finally(() => setLoading(false));
+      
     return () => { cancelled = true; };
   }, []);
 

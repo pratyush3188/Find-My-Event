@@ -25,7 +25,9 @@ import Events         from './pages/Events';
 import Discover       from './pages/Discover';
 import Auth           from './pages/Auth';
 import Clubs          from './pages/Clubs';
+import Home2          from './pages/Home2';
 import ClubDetail     from './pages/ClubDetail';
+import EventDetail    from './pages/EventDetail';
 import Dashboard      from './pages/Dashboard';
 import CreateEvent    from './pages/CreateEvent';
 import GeneralSettings from './pages/GeneralSettings';
@@ -79,6 +81,7 @@ function AppContent() {
     ];
     const isInner = innerPages.includes(currentRoute)
       || currentRoute.startsWith('#club-detail')
+      || currentRoute.startsWith('#event-detail')
       || currentRoute.startsWith('#edit-event');
 
     if (isInner) return;
@@ -93,10 +96,12 @@ function AppContent() {
 
   /* ── Render ── */
   const renderContent = () => {
+    if (currentRoute === '#home2')            return <Home2 />;
     if (currentRoute === '#events')           return <Events isLoggedIn={isLoggedIn} />;
     if (currentRoute === '#discover')         return <Discover />;
     if (currentRoute === '#clubs')            return <Clubs />;
     if (currentRoute.startsWith('#club-detail')) return <ClubDetail hash={currentRoute} />;
+    if (currentRoute.startsWith('#event-detail')) return <EventDetail hash={currentRoute} />;
     if (currentRoute === '#signin')           return <Auth />;
     if (currentRoute === '#your-events')      return <YourEvents />;
     if (currentRoute === '#registered-events') return <RegisteredEvents />;

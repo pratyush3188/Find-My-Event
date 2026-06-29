@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Bell, Plus, Menu, X, Settings, User, LogOut, ChevronDown, Shield, TrendingUp, Calendar, Heart } from 'lucide-react';
+import { Search, Bell, Plus, Menu, X, Settings, User, LogOut, ChevronDown, Shield, TrendingUp, Calendar, Heart, Home, Award, Command, LayoutGrid } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
@@ -60,19 +60,18 @@ const Navbar: React.FC = () => {
     }
   }, [isLoggedIn]);
 
-  const isLanding = !isLoggedIn && (hash === '#home' || hash === '');
 
-  const navLinks = isLanding
+  const navLinks = isLoggedIn
     ? [
-        { name: 'Home',    href: '#home' },
-        { name: 'Clubs',   href: '#clubs' },
-        { name: 'Gallery', href: '#gallery' },
+        { name: 'Home',      href: '#home2',       icon: <Home size={16} /> },
+        { name: 'Clubs',     href: '#clubs',       icon: <Award size={16} /> },
+        { name: 'My Events', href: '#your-events', icon: <Command size={16} /> },
+        { name: 'Gallery',   href: '#gallery',     icon: <LayoutGrid size={16} /> },
       ]
     : [
-        { name: 'Home',     href: '#home' },
-        { name: 'Discover', href: '#discover' },
-        { name: 'Events',   href: '#events' },
-        { name: 'Clubs',    href: '#clubs' },
+        { name: 'Home',      href: '#home2',   icon: <Home size={16} /> },
+        { name: 'Clubs',     href: '#clubs',   icon: <Award size={16} /> },
+        { name: 'Gallery',   href: '#gallery', icon: <LayoutGrid size={16} /> },
       ];
 
   /* ── Theming — navbar always looks white on landing, dark on inner pages ── */
@@ -118,14 +117,15 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* ── Nav links ── */}
-        <div style={{ display: 'flex', gap: '0rem', alignItems: 'center' }} className="mobile-hidden">
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }} className="mobile-hidden">
           {navLinks.map(link => (
             <a
               key={link.name}
               href={link.href}
               className="nav-link"
-              style={{ color: textColor, opacity: hash === link.href ? 1 : 0.75 }}
+              style={{ color: textColor, opacity: hash === link.href ? 1 : 0.75, display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
+              {link.icon}
               {link.name}
             </a>
           ))}
@@ -267,7 +267,7 @@ const Navbar: React.FC = () => {
               className="nav-cta-btn"
               onClick={() => window.location.hash = '#signin'}
             >
-              Discover Events →
+              Get Started
             </button>
           )}
         </div>
@@ -329,7 +329,7 @@ const Navbar: React.FC = () => {
               ) : (
                 <button type="button" onClick={() => { window.location.hash = '#signin'; setIsMobileMenuOpen(false); }}
                   style={{ width: '100%', background: '#111', color: '#fff', border: 'none', padding: '0.85rem', borderRadius: '12px', fontWeight: 700, cursor: 'none', fontFamily: 'inherit' }}>
-                  Discover Events →
+                  Get Started
                 </button>
               )}
             </div>

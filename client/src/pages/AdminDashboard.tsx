@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../api/axios';
 
-type Tab = 'overview' | 'events' | 'pending' | 'withdrawals' | 'users' | 'notifications';
+type Tab = 'overview' | 'events' | 'clubs' | 'pending' | 'withdrawals' | 'users' | 'notifications';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -16,8 +16,9 @@ const AdminDashboard: React.FC = () => {
   // Data States
   const [users, setUsers] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalUsers: 0, totalEvents: 0, activeNotifications: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, totalEvents: 0, totalClubs: 0, activeNotifications: 0 });
 
   // Event Form State
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -28,6 +29,14 @@ const AdminDashboard: React.FC = () => {
   });
   const [eventImage, setEventImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Club Form State
+  const [isClubModalOpen, setIsClubModalOpen] = useState(false);
+  const [editingClub, setEditingClub] = useState<any>(null);
+  const [clubFormData, setClubFormData] = useState({
+    name: '', type: 'Club', description: '', aboutUs: '', tags: ''
+  });
+  const [clubImage, setClubImage] = useState<File | null>(null);
 
   // Registration View State
   const [selectedEventForReg, setSelectedEventForReg] = useState<any>(null);
@@ -62,11 +71,12 @@ const AdminDashboard: React.FC = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [usersRes, eventsRes, approvedRes, notifsRes] = await Promise.all([
+      const [usersRes, eventsRes, approvedRes, notifsRes, clubsRes] = await Promise.all([
         api.get('/admin/users'),
         api.get('/events'),
         api.get('/events/approved'),
-        api.get('/notifications')
+        api.get('/notifications'),
+        api.get('/clubs')
       ]);
       setUsers(usersRes.data);
       
@@ -88,9 +98,12 @@ const AdminDashboard: React.FC = () => {
 
       setEvents([...mappedApproved, ...eventsRes.data]);
       setNotifications(notifsRes.data);
+      setClubs(clubsRes.data || []);
+      
       setStats({
         totalUsers: usersRes.data.length,
         totalEvents: eventsRes.data.length + mappedApproved.length,
+        totalClubs: clubsRes.data?.length || 0,
         activeNotifications: notifsRes.data.length
       });
     } catch (err) {
@@ -188,6 +201,41 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleClubSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData();
+    Object.entries(clubFormData).forEach(([key, value]) => formData.append(key, value));
+    if (clubImage) formData.append('logo', clubImage);
+
+    try {
+      if (editingClub) {
+        await api.put(`/admin/clubs/${editingClub._id}`, formData);
+      } else {
+        await api.post('/admin/clubs', formData);
+      }
+      setIsClubModalOpen(false);
+      setEditingClub(null);
+      setClubFormData({ name: '', type: 'Club', description: '', aboutUs: '', tags: '' });
+      setClubImage(null);
+      fetchInitialData();
+    } catch (err) {
+      console.error('Club submission failed:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteClub = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this club?')) return;
+    try {
+      await api.delete(`/admin/clubs/${id}`);
+      fetchInitialData();
+    } catch (err) {
+      console.error('Club delete failed:', err);
+    }
+  };
+
   const viewRegistrations = async (event: any) => {
     setSelectedEventForReg(event);
     setLoadingReg(true);
@@ -238,6 +286,7 @@ const AdminDashboard: React.FC = () => {
           {[
             { id: 'overview', label: 'Overview', icon: TrendingUp },
             { id: 'events', label: 'Manage Events', icon: Calendar },
+            { id: 'clubs', label: 'Manage Clubs', icon: Users },
             { id: 'pending', label: 'Pending Approvals', icon: Shield },
             { id: 'withdrawals', label: 'Withdraw Requests', icon: Trash2 },
             { id: 'users', label: 'Manage Users', icon: Users },
@@ -275,6 +324,14 @@ const AdminDashboard: React.FC = () => {
               <Plus size={20} /> Create Event
             </button>
           )}
+          {activeTab === 'clubs' && (
+            <button
+              onClick={() => { setEditingClub(null); setClubFormData({ name: '', type: 'Club', description: '', aboutUs: '', tags: '' }); setIsClubModalOpen(true); }}
+              style={{ background: '#ff6f3f', color: 'var(--text-primary)', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            >
+              <Plus size={20} /> Create Club
+            </button>
+          )}
         </header>
 
         {/* Overview Tab */}
@@ -283,6 +340,7 @@ const AdminDashboard: React.FC = () => {
             {[
               { label: 'Total Users', value: stats.totalUsers, icon: Users, color: '#3b82f6' },
               { label: 'Active Events', value: stats.totalEvents, icon: Calendar, color: '#ff6f3f' },
+              { label: 'Active Clubs', value: stats.totalClubs, icon: Users, color: '#a855f7' },
               { label: 'Global Alerts', value: stats.activeNotifications, icon: Bell, color: '#facc15' },
             ].map((stat, idx) => (
               <motion.div
@@ -322,6 +380,30 @@ const AdminDashboard: React.FC = () => {
                   <button onClick={() => viewRegistrations(event)} style={{ background: 'var(--border-subtle)', border: 'none', color: 'var(--text-primary)', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Eye size={18} /></button>
                   <button onClick={() => { setEditingEvent(event); setEventFormData({ ...event }); setIsEventModalOpen(true); }} style={{ background: 'rgba(59,130,246,0.1)', border: 'none', color: '#3b82f6', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Edit2 size={18} /></button>
                   <button onClick={() => deleteEvent(event._id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Clubs Tab */}
+        {activeTab === 'clubs' && (
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {clubs.length === 0 && <p style={{ color: 'var(--text-muted)', padding: '3rem', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: 16 }}>No clubs found.</p>}
+            {clubs.map((club) => (
+              <motion.div
+                key={club._id}
+                className="admin-item-row"
+                style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--border-subtle)', borderRadius: '20px', padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem' }}
+              >
+                <img src={club.logo} alt="" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{club.name}</h3>
+                  <p style={{ opacity: 0.5, fontSize: '0.9rem' }}>{club.type} • {club.id}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={() => { setEditingClub(club); setClubFormData({ name: club.name, type: club.type, description: club.description, aboutUs: club.aboutUs, tags: (club.tags || []).join(', ') }); setIsClubModalOpen(true); }} style={{ background: 'rgba(59,130,246,0.1)', border: 'none', color: '#3b82f6', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Edit2 size={18} /></button>
+                  <button onClick={() => deleteClub(club._id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Trash2 size={18} /></button>
                 </div>
               </motion.div>
             ))}
@@ -559,6 +641,61 @@ const AdminDashboard: React.FC = () => {
                 <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
                   <button type="submit" disabled={isSubmitting} style={{ width: '100%', background: '#ff6f3f', color: 'var(--text-primary)', border: 'none', padding: '18px', borderRadius: '16px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}>
                     {isSubmitting ? <Loader2 className="spin" size={24} /> : (editingEvent ? 'Update Event' : 'Create Event')}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create/Edit Club Modal */}
+      <AnimatePresence>
+        {isClubModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ background: 'var(--bg-card)', width: '100%', maxWidth: '800px', borderRadius: '24px', border: '1px solid var(--border-color)', padding: '2.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>{editingClub ? 'Edit Club' : 'Create New Club'}</h2>
+                <button onClick={() => setIsClubModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><X size={32} /></button>
+              </div>
+
+              <form className="admin-form-grid" onSubmit={handleClubSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.5 }}>Club Name</label>
+                  <input required placeholder="E.g. JIG" value={clubFormData.name} onChange={e => setClubFormData({...clubFormData, name: e.target.value})} style={{ width: '100%', background: 'var(--border-subtle)', border: '1px solid rgba(0,0,0,0.1)', padding: '14px', borderRadius: '12px', color: 'var(--text-primary)' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.5 }}>Type</label>
+                  <select value={clubFormData.type} onChange={e => setClubFormData({...clubFormData, type: e.target.value})} style={{ width: '100%', background: 'var(--border-subtle)', border: '1px solid rgba(0,0,0,0.1)', padding: '14px', borderRadius: '12px', color: 'var(--text-primary)' }}>
+                    {['Club', 'Organization', 'Initiative'].map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.5 }}>Short Description</label>
+                  <input required placeholder="Brief one-liner" value={clubFormData.description} onChange={e => setClubFormData({...clubFormData, description: e.target.value})} style={{ width: '100%', background: 'var(--border-subtle)', border: '1px solid rgba(0,0,0,0.1)', padding: '14px', borderRadius: '12px', color: 'var(--text-primary)' }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.5 }}>About Us (Detailed)</label>
+                  <textarea required placeholder="Detailed about section..." value={clubFormData.aboutUs} onChange={e => setClubFormData({...clubFormData, aboutUs: e.target.value})} style={{ width: '100%', background: 'var(--border-subtle)', border: '1px solid rgba(0,0,0,0.1)', padding: '14px', borderRadius: '12px', color: 'var(--text-primary)', minHeight: '120px' }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.5 }}>Tags (comma separated)</label>
+                  <input placeholder="Technology, Design, Open Source" value={clubFormData.tags} onChange={e => setClubFormData({...clubFormData, tags: e.target.value})} style={{ width: '100%', background: 'var(--border-subtle)', border: '1px solid rgba(0,0,0,0.1)', padding: '14px', borderRadius: '12px', color: 'var(--text-primary)' }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.5 }}>Club Logo (Cloudinary)</label>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                     <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', padding: '14px', background: 'var(--border-subtle)', border: '2px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer' }}>
+                        <ImageIcon size={20} />
+                        <span>{clubImage ? clubImage.name : 'Click to upload logo'}</span>
+                        <input type="file" hidden accept="image/*" onChange={e => setClubImage(e.target.files ? e.target.files[0] : null)} />
+                     </label>
+                     {editingClub?.logo && !clubImage && <img src={editingClub.logo} style={{ width: '54px', height: '54px', borderRadius: '8px' }} />}
+                  </div>
+                </div>
+                <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                  <button type="submit" disabled={isSubmitting} style={{ width: '100%', background: '#ff6f3f', color: 'var(--text-primary)', border: 'none', padding: '18px', borderRadius: '16px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}>
+                    {isSubmitting ? <Loader2 className="spin" size={24} /> : (editingClub ? 'Update Club' : 'Create Club')}
                   </button>
                 </div>
               </form>
