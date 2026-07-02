@@ -9,6 +9,9 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    if (token === 'mock_token') {
+      return Promise.reject(new axios.Cancel('Mock token bypass'));
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

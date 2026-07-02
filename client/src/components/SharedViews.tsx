@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, ArrowLeft, Heart, Share2, Ticket, Sparkles, User as UserIcon, Mail, Phone, Users, CheckCircle, Loader2, X, ChevronDown } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Heart, Share2, Ticket, Sparkles, Users, CheckCircle, Loader2, X, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../contexts/AuthContext';

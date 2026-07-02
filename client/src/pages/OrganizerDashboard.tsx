@@ -452,7 +452,12 @@ export default function OrganizerDashboard() {
 
                            {/* Manage Event Button */}
                            <div>
-                             <button style={{ background: '#111', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'opacity 0.2s' }} onMouseOver={e=>e.currentTarget.style.opacity='0.8'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>
+                             <button 
+                               onClick={() => window.location.hash = `#edit-event?id=${ev.id}`}
+                               style={{ background: '#111', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'opacity 0.2s' }} 
+                               onMouseOver={e=>e.currentTarget.style.opacity='0.8'} 
+                               onMouseOut={e=>e.currentTarget.style.opacity='1'}
+                             >
                                Manage Event <span style={{ fontSize: '1.1rem' }}>→</span>
                              </button>
                            </div>

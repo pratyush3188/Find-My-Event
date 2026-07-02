@@ -89,8 +89,14 @@ function AppContent() {
   /* ── Auth guard ── */
   useEffect(() => {
     if (loading) return;
-    const protected_ = ['#create-event', '#settings', '#edit-profile', '#admin', '#your-events', '#registered-events'];
-    if (!isLoggedIn && protected_.includes(currentRoute)) {
+    const protected_ = [
+      '#create-event', '#settings', '#edit-profile', '#admin', 
+      '#your-events', '#registered-events', '#organizer-dashboard', '#edit-event'
+    ];
+    
+    const isProtected = protected_.some(prefix => currentRoute.startsWith(prefix));
+    
+    if (!isLoggedIn && isProtected) {
       window.location.hash = '#signin';
     }
   }, [currentRoute, isLoggedIn, loading]);
@@ -134,7 +140,10 @@ function AppContent() {
     if (currentRoute === '#registered-events') return <RegisteredEvents />;
     if (currentRoute === '#favourites')       return <Favourites />;
     if (currentRoute === '#gallery')          return <Gallery />;
-    if (currentRoute.startsWith('#organizer-dashboard')) return <OrganizerDashboard />;
+    if (currentRoute.startsWith('#organizer-dashboard')) {
+      if (!isLoggedIn) return null;
+      return <OrganizerDashboard />;
+    }
 
     if (currentRoute === '#create-event') {
       if (!isLoggedIn) return null;
@@ -196,7 +205,7 @@ function AppContent() {
   return (
     <div className="App">
       {/* Navbar (Hidden on specific full-page dashboards) */}
-      {!currentRoute.startsWith('#organizer-dashboard') && currentRoute !== '#admin' && <Navbar />}
+      {!currentRoute.startsWith('#organizer-dashboard') && !currentRoute.startsWith('#edit-event') && currentRoute !== '#admin' && <Navbar />}
 
       {/* Page content */}
       <main>

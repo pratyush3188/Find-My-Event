@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Loader2, MapPin, QrCode } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -67,7 +67,7 @@ export default function RegisteredEvents() {
   }
 
   // Filter based on activeTab
-  const filteredEvents = registeredEvents.filter(ev => {
+  const filteredEvents = registeredEvents.filter(() => {
     if (activeTab === 'past') return false; 
     return true; 
   });

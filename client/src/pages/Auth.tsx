@@ -14,7 +14,7 @@ const Auth: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, verifyOtp, handleLogin, setupProfile } = useAuth();
+  const { register, verifyOtp, handleLogin, setupProfile, mockLogin } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,8 +32,12 @@ const Auth: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (step === 'login') {
-        await handleLogin(formData.email, formData.password);
-        window.location.hash = '#home';
+        const result = await handleLogin(formData.email, formData.password);
+        if (result.user?.role === 'admin' && result.user?.email === 'organizer@eventum.com') {
+          window.location.hash = '#organizer-dashboard/my-events';
+        } else {
+          window.location.hash = '#home';
+        }
       } else if (step === 'signup') {
         await register(formData.name, formData.email, formData.password);
         setStep('otp');
@@ -160,7 +164,7 @@ const Auth: React.FC = () => {
               <button style={btnDark}><span style={{ fontSize: '1.1rem' }}>&#63743;</span> Sign In with Apple</button>
               
               <button 
-                onClick={() => window.location.hash = '#organizer-dashboard/my-events'} 
+                onClick={mockLogin} 
                 style={{ background: 'none', border: 'none', color: '#888', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', marginTop: '0.5rem', textDecoration: 'underline' }}
               >
                 Organizer Login

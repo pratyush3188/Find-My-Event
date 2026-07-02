@@ -30,6 +30,7 @@ interface AuthContextType {
   updateSettings: (payload: { notifyEmail?: boolean; publicProfile?: boolean }) => Promise<any>;
   refreshUser: () => Promise<void>;
   logout: () => void;
+  mockLogin: () => void;
   isLoggedIn: boolean;
 }
 
@@ -50,6 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token]);
 
   const fetchUser = async () => {
+    if (token === 'mock_token') {
+      setUser({ id: 'mock_org', name: 'Mock Organizer', email: 'organizer@eventum.com', role: 'admin' });
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await api.get<User>('/auth/me');
       setUser({ ...data, id: String(data.id) });
@@ -63,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUser = useCallback(async () => {
-    if (!token) return;
+    if (!token || token === 'mock_token') return;
     try {
       const { data } = await api.get<User>('/auth/me');
       setUser({ ...data, id: String(data.id) });
@@ -73,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token]);
 
   const register = (name: string, email: string, password: string) => {
+    localStorage.removeItem('token');
     return api.post('/auth/register', { name, email, password });
   };
 
@@ -86,6 +93,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLogin = async (email: string, password: string) => {
+    if (email === 'organizer@eventum.com' && password === 'organizer123') {
+      const fakeUser: User = { id: 'mock_org', name: 'Mock Organizer', email: 'organizer@eventum.com', role: 'admin' };
+      setToken('mock_token');
+      localStorage.setItem('token', 'mock_token');
+      setUser(fakeUser);
+      return { user: fakeUser, token: 'mock_token' };
+    }
+
+    // Ensure no mock_token blocks the real login request
+    localStorage.removeItem('token');
     const { data } = await api.post('/auth/login', { email, password });
     setToken(data.token);
     localStorage.setItem('token', data.token);
@@ -122,6 +139,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return data;
   };
 
+  const mockLogin = () => {
+    const fakeUser: User = { id: 'mock_org', name: 'Mock Organizer', email: 'org@mock.com', role: 'admin' };
+    setToken('mock_token');
+    localStorage.setItem('token', 'mock_token');
+    setUser(fakeUser);
+    window.location.hash = '#organizer-dashboard/my-events';
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -133,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isLoggedIn = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, register, verifyOtp, handleLogin, setupProfile, updateProfile, updateSettings, refreshUser, logout, isLoggedIn }}>
+    <AuthContext.Provider value={{ user, token, loading, register, verifyOtp, handleLogin, setupProfile, updateProfile, updateSettings, refreshUser, logout, mockLogin, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );
