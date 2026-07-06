@@ -111,7 +111,7 @@ const EventDetail = ({ hash }: { hash?: string }) => {
           <RegisterView event={rawEvent} onBack={() => setShowRegister(false)} />
         </div>
       ) : (
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '6rem 2rem 6rem', position: 'relative', zIndex: 1 }}>
+      <main className="event-detail-main" style={{ maxWidth: '1200px', margin: '0 auto', padding: '6rem 2rem 6rem', position: 'relative', zIndex: 1 }}>
         <div className="event-detail-grid">
           
           <style>{`
@@ -143,10 +143,25 @@ const EventDetail = ({ hash }: { hash?: string }) => {
             .prize-card.pos-2 { background: linear-gradient(180deg, #fff 0%, #e2e8f0 100%); border-color: #cbd5e1; }
             .prize-card.pos-3 { background: linear-gradient(180deg, #fff 0%, #fed7aa 100%); border-color: #fdba74; }
             
-            .timeline-container { position: relative; padding-left: 24px; }
+            .timeline-container { position: relative; padding-left: 40px; }
             .timeline-container::before {
-               content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px;
+               content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px;
                background: repeating-linear-gradient(to bottom, #cbd5e1 0, #cbd5e1 4px, transparent 4px, transparent 8px);
+            }
+
+            @media (max-width: 768px) {
+              .event-detail-main { padding: 5rem 1.25rem 3rem !important; }
+              .event-poster { height: 320px !important; }
+              .event-title { font-size: 2rem !important; margin-bottom: 1rem !important; }
+              
+              /* Timeline Mobile Fix */
+              .timeline-dot { left: -46px !important; } 
+              .timeline-card { margin-left: 0 !important; padding: 1rem !important; }
+              
+              /* Registration Mobile Fix */
+              .reg-card { padding: 1.25rem !important; }
+              .reg-card-flex { flex-direction: column; align-items: stretch !important; gap: 1rem; }
+              .reg-btn { width: 100% !important; justify-content: center !important; }
             }
           `}</style>
 
@@ -154,6 +169,7 @@ const EventDetail = ({ hash }: { hash?: string }) => {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Event Poster */}
             <motion.div 
+              className="event-poster"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               style={{ background: '#111', borderRadius: '16px', overflow: 'hidden', height: '420px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', marginBottom: '1.5rem' }}
@@ -291,7 +307,7 @@ const EventDetail = ({ hash }: { hash?: string }) => {
                 </button>
               )}
               <span style={{ display: 'inline-block', background: '#f3e8ff', color: '#a855f7', border: '1px solid #e9d5ff', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem' }}>{currentEvent.category}</span>
-              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
+              <h1 className="event-title" style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
                 {currentEvent.title}
               </h1>
               
@@ -362,11 +378,11 @@ const EventDetail = ({ hash }: { hash?: string }) => {
             </div>
 
             {/* Registration Card */}
-            <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '1.5rem', marginBottom: '2.5rem', border: '1px solid #f1f5f9' }}>
+            <div className="reg-card" style={{ background: '#f8fafc', borderRadius: '12px', padding: '1.5rem', marginBottom: '2.5rem', border: '1px solid #f1f5f9' }}>
               <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginBottom: '1rem' }}>
                 Registration closes on {new Date(currentEvent.startDate || currentEvent.date).toLocaleString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="reg-card-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.1rem' }}>Ticket Price</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111' }}>
@@ -374,6 +390,7 @@ const EventDetail = ({ hash }: { hash?: string }) => {
                   </div>
                 </div>
                 <button 
+                  className="reg-btn"
                   onClick={() => {
                     if (!isLoggedIn) {
                       window.location.hash = '#signin';
@@ -406,7 +423,7 @@ const EventDetail = ({ hash }: { hash?: string }) => {
                 <div className="timeline-container">
                    {rawEvent.timeline.map((item: any, i: number) => (
                      <div key={i} style={{ display: 'flex', gap: '1.25rem', position: 'relative', marginBottom: i === rawEvent.timeline.length - 1 ? 0 : '2rem' }}>
-                        <div style={{ background: '#fff', border: i % 2 === 0 ? '1px solid #ec4899' : '1px solid #3b82f6', borderRadius: '8px', width: '42px', height: '42px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'absolute', left: '-33.5px', top: 0, zIndex: 2 }}>
+                        <div className="timeline-dot" style={{ background: '#fff', border: i % 2 === 0 ? '1px solid #ec4899' : '1px solid #3b82f6', borderRadius: '8px', width: '42px', height: '42px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'absolute', left: '-46px', top: 0, zIndex: 2 }}>
                           <div style={{ background: i % 2 === 0 ? '#ec4899' : '#3b82f6', width: '100%', textAlign: 'center', color: '#fff', fontSize: '0.5rem', fontWeight: 800, padding: '0.1rem 0' }}>
                             {new Date(item.startDate?.split(',')[0] || item.date).toLocaleString('en-US', { month: 'short' }).toUpperCase()}
                           </div>
@@ -414,7 +431,7 @@ const EventDetail = ({ hash }: { hash?: string }) => {
                             {new Date(item.startDate?.split(',')[0] || item.date).getDate() || item.date?.split(' ')[0]}
                           </div>
                         </div>
-                        <div style={{ marginLeft: '1.5rem', flex: 1, background: '#fff', border: '1px solid #f1f5f9', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                        <div className="timeline-card" style={{ flex: 1, background: '#fff', border: '1px solid #f1f5f9', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                              {item.startDate} <span style={{ color: '#94a3b8' }}>→</span> {item.endDate}
                            </div>

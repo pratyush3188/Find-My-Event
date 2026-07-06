@@ -114,7 +114,7 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
         pointerEvents: 'none'
       }} />
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '7rem 2rem 6rem', position: 'relative', zIndex: 1 }}>
+      <main className="club-detail-main" style={{ maxWidth: '1200px', margin: '0 auto', padding: '7rem 2rem 6rem', position: 'relative', zIndex: 1 }}>
         <div className="club-detail-grid">
           
           <style>{`
@@ -144,15 +144,25 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
               display: block;
               object-fit: cover;
             }
+            
+            @media (max-width: 768px) {
+              .club-detail-main { padding: 5rem 1.25rem 3rem !important; }
+              .club-detail-grid { gap: 1.5rem !important; }
+              .club-logo-container { margin-left: 0 !important; border-radius: 12px !important; }
+              .club-title { font-size: 2rem !important; }
+              .gallery-masonry { column-gap: 0.75rem !important; }
+              .gallery-masonry img { margin-bottom: 0.75rem !important; border-radius: 10px !important; }
+            }
           `}</style>
 
           {/* LEFT COLUMN */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Club Poster / Logo */}
             <motion.div 
+              className="club-logo-container"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ borderRadius: '16px', overflow: 'hidden', width: '100%', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', display: 'flex', border: '1px solid #000', marginLeft: '-24px' }}
+              style={{ borderRadius: '16px', overflow: 'hidden', width: '100%', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', display: 'flex', border: '1px solid rgba(0,0,0,0.06)' }}
             >
               <img src={club.logo} alt={club.name} style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
             </motion.div>
@@ -170,7 +180,7 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
             <span style={{ display: 'inline-block', background: '#f3e8ff', color: '#9333ea', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', width: 'fit-content' }}>
               {club.tags?.[0] || club.type || 'Entrepreneurship'}
             </span>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+            <h1 className="club-title" style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
               {club.name}
             </h1>
             <p style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500, marginBottom: '2rem' }}>

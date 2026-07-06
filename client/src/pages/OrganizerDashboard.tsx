@@ -65,6 +65,7 @@ export default function OrganizerDashboard() {
   const [ticketPrice, setTicketPrice] = useState('');
   const [maxTickets, setMaxTickets] = useState('');
   const [refundPolicy, setRefundPolicy] = useState('none');
+  const [generateQRCode, setGenerateQRCode] = useState(false);
   
   const [capacity, setCapacity] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -137,6 +138,7 @@ export default function OrganizerDashboard() {
     formData.append('ticketType', ticketType);
     formData.append('price', ticketType === 'Paid' ? ticketPrice : 'Free');
     formData.append('seats', maxTickets ? maxTickets : 'Limited');
+    formData.append('generateQRCode', String(generateQRCode));
     formData.append('rules', instructions);
     formData.append('image', imageFile);
 
@@ -948,6 +950,20 @@ export default function OrganizerDashboard() {
                         onChange={e => setCapacity(e.target.value)}
                         style={{ background: 'transparent', border: 'none', textAlign: 'right', fontWeight: 700, color: '#555', width: '100px', outline: 'none' }} 
                       />
+                   </div>
+
+                   {/* Generate QR Code Toggle */}
+                   <div style={{ background: '#eaeaea', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <Ticket size={20} color="#888" />
+                        <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: 700, color: '#555' }}>Generate QR Codes for Attendees</div>
+                      </div>
+                      <div 
+                        onClick={() => setGenerateQRCode(!generateQRCode)}
+                        style={{ width: '40px', height: '24px', background: generateQRCode ? '#8B5CF6' : '#ccc', borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: '0.2s' }}
+                      >
+                        <div style={{ width: '18px', height: '18px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: generateQRCode ? '19px' : '3px', transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                      </div>
                    </div>
 
                    {/* Action Buttons */}

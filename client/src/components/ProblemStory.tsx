@@ -30,103 +30,108 @@ const ProblemStory = () => {
       const cards = cardsRef.current.filter(Boolean);
       const gap = 20;
 
-      // ── INITIAL STATE ──
-      // Card 0: slightly below center, slightly right of center
-      gsap.set(cards[0], { x: 40, y: 60, rotate: 0, zIndex: 10, opacity: 1 });
+      let mm = gsap.matchMedia();
 
-      // Cards 1–4: off-screen right, stacked
-      for (let i = 1; i < 5; i++) {
-        gsap.set(cards[i], { x: window.innerWidth + 100, y: 60, rotate: 0, zIndex: 10 - i, opacity: 1 });
-      }
+      mm.add({
+        isDesktop: "(min-width: 769px)",
+        isMobile: "(max-width: 768px)"
+      }, (context) => {
+        let { isMobile } = context.conditions as any;
+        const scaleFactor = isMobile ? 0.45 : 1;
+        const spacingScale = isMobile ? 0.4 : 1;
 
-      // Text, labels, button: hidden
-      gsap.set(textChaosRef.current, { opacity: 0, y: 30 });
-      gsap.set(textSolutionRef.current, { opacity: 0, y: 30 });
-      gsap.set(labelsWrapRef.current, { opacity: 0 });
-      gsap.set(btnRef.current, { opacity: 0, y: 20 });
+        // ── INITIAL STATE ──
+        // Card 0: slightly below center, slightly right of center
+        gsap.set(cards[0], { x: 40 * scaleFactor, y: 60 * scaleFactor, rotate: 0, zIndex: 10, opacity: 1, scale: scaleFactor });
 
-      // ── TIMELINE ──
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: 'top top',
-          end: '+=250%', // 2.5 screens of scrolling (slower, smoother)
-          scrub: 1,
-          pin: true,
-          anticipatePin: 1
+        // Cards 1–4: off-screen right, stacked
+        for (let i = 1; i < 5; i++) {
+          gsap.set(cards[i], { x: window.innerWidth + 100, y: 60 * scaleFactor, rotate: 0, zIndex: 10 - i, opacity: 1, scale: scaleFactor });
         }
-      });
 
-      // ── PHASE 1: Cards slide in horizontally and line up ──
-      // Calculate positions so all 5 cards sit in a row centered on screen
-      const totalRow = 5 * CARD_W + 4 * gap;
-      const startX = -totalRow / 2 + CARD_W / 2;
+        // Text, labels, button: hidden
+        gsap.set(textChaosRef.current, { opacity: 0, y: 30 });
+        gsap.set(textSolutionRef.current, { opacity: 0, y: 30 });
+        gsap.set(labelsWrapRef.current, { opacity: 0 });
+        gsap.set(btnRef.current, { opacity: 0, y: 20 });
 
-      // Card 0 slides to its row position
-      tl.to(cards[0], {
-        x: startX,
-        y: 60,
-        rotate: 0,
-        ease: 'power3.out',
-        duration: 1
-      }, 0);
+        // ── TIMELINE ──
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: 'top top',
+            end: '+=250%', // 2.5 screens of scrolling
+            scrub: 1,
+            pin: true,
+            anticipatePin: 1
+          }
+        });
 
-      // Cards 1–4 fly in from right to their row positions
-      for (let i = 1; i < 5; i++) {
-        tl.to(cards[i], {
-          x: startX + i * (CARD_W + gap),
-          y: 60,
+        // ── PHASE 1: Cards slide in horizontally and line up ──
+        const actualCardW = CARD_W * spacingScale;
+        const actualGap = gap * spacingScale;
+        const totalRow = 5 * actualCardW + 4 * actualGap;
+        const startX = -totalRow / 2 + actualCardW / 2;
+
+        tl.to(cards[0], {
+          x: startX,
+          y: 60 * scaleFactor,
           rotate: 0,
           ease: 'power3.out',
           duration: 1
-        }, 0.1 + i * 0.12);
-      }
+        }, 0);
 
-      // Dwell so user sees the neat row
-      tl.to({}, { duration: 0.6 });
+        for (let i = 1; i < 5; i++) {
+          tl.to(cards[i], {
+            x: startX + i * (actualCardW + actualGap),
+            y: 60 * scaleFactor,
+            rotate: 0,
+            ease: 'power3.out',
+            duration: 1
+          }, 0.1 + i * 0.12);
+        }
 
-      // ── PHASE 2: Cards tilt & push down to bottom ──
-      const rots = [-11.74, -20.99, 10.49, -10.43, -24];
-      // Push cards much lower so they bleed off the bottom edge of the screen
-      const chaosX = [-220, -110, 0, 120, 240];
-      const chaosY = [320, 340, 310, 350, 320];
+        tl.to({}, { duration: 0.6 });
 
-      tl.addLabel("tilt");
+        // ── PHASE 2: Cards tilt & push down to bottom ──
+        const rots = [-11.74, -20.99, 10.49, -10.43, -24];
+        const chaosX = isMobile ? [-120, -50, 0, 50, 120] : [-220, -110, 0, 120, 240];
+        const chaosY = isMobile ? [180, 200, 170, 210, 180] : [320, 340, 310, 350, 320];
 
-      cards.forEach((card, i) => {
-        tl.to(card, {
-          x: chaosX[i],
-          y: chaosY[i],
-          rotate: rots[i],
-          ease: 'power2.inOut',
-          duration: 1.2
-        }, "tilt");
+        tl.addLabel("tilt");
+
+        cards.forEach((card, i) => {
+          tl.to(card, {
+            x: chaosX[i],
+            y: chaosY[i],
+            rotate: rots[i],
+            ease: 'power2.inOut',
+            duration: 1.2
+          }, "tilt");
+        });
+
+        tl.to({}, { duration: 0.4 });
+
+        // ── PHASE 3: Arrows + text appear ──
+        tl.addLabel("reveal");
+
+        tl.to(textChaosRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "reveal");
+        tl.to(btnRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "reveal+=0.1");
+        tl.to(labelsWrapRef.current, { opacity: 1, duration: 0.6, ease: 'power2.out' }, "reveal+=0.3");
+
+        tl.to({}, { duration: 1.0 });
+
+        // ── PHASE 4: Transition to Solution Text ──
+        tl.addLabel("solution");
+        
+        tl.to(textChaosRef.current, { opacity: 0, y: -20, duration: 0.5, ease: 'power2.in' }, "solution");
+        tl.to(textSolutionRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "solution+=0.4");
+        tl.to({}, { duration: 0.2 });
+
+        return () => {
+          tl.kill();
+        };
       });
-
-      // Dwell so user sees the chaos
-      tl.to({}, { duration: 0.4 });
-
-      // ── PHASE 3: Arrows + text appear ──
-      tl.addLabel("reveal");
-
-      tl.to(textChaosRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "reveal");
-      tl.to(btnRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "reveal+=0.1");
-      tl.to(labelsWrapRef.current, { opacity: 1, duration: 0.6, ease: 'power2.out' }, "reveal+=0.3");
-
-      // Dwell so user reads the chaos text
-      tl.to({}, { duration: 1.0 });
-
-      // ── PHASE 4: Transition to Solution Text ──
-      tl.addLabel("solution");
-      
-      // Fade out chaos text ONLY (keep arrows/labels visible)
-      tl.to(textChaosRef.current, { opacity: 0, y: -20, duration: 0.5, ease: 'power2.in' }, "solution");
-      
-      // Fade in solution text
-      tl.to(textSolutionRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "solution+=0.4");
-
-      // Hold everything visible briefly before unpinning
-      tl.to({}, { duration: 0.2 });
 
     }, containerRef);
 
@@ -152,11 +157,12 @@ const ProblemStory = () => {
         flexDirection: 'column',
         alignItems: 'center',
         zIndex: 30,
+        padding: '0 1rem'
       }}>
         <div style={{ position: 'relative', width: '100%', height: '80px', display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
           <h2 ref={textChaosRef} style={{
             position: 'absolute',
-            fontSize: 'clamp(1.8rem, 3.5vw, 3rem)',
+            fontSize: 'clamp(1.8rem, 5vw, 3rem)',
             fontWeight: 700,
             color: '#111',
             letterSpacing: '-0.03em',
@@ -168,7 +174,7 @@ const ProblemStory = () => {
           </h2>
           <h2 ref={textSolutionRef} style={{
             position: 'absolute',
-            fontSize: 'clamp(1.8rem, 3.5vw, 3rem)',
+            fontSize: 'clamp(1.8rem, 5vw, 3rem)',
             fontWeight: 700,
             color: '#111',
             letterSpacing: '-0.03em',
@@ -210,55 +216,71 @@ const ProblemStory = () => {
       }}>
 
         {/* LABELS + CURVED ARROWS */}
-        <div ref={labelsWrapRef} style={{
+        <div ref={labelsWrapRef} className="problem-story-labels" style={{
           position: 'absolute',
           width: '100vw',
           height: '100vh',
           pointerEvents: 'none',
-          zIndex: 25,
+          zIndex: 5,
           transform: 'translate(-50%, -50%)',
         }}>
+          <svg width="0" height="0" style={{ position: 'absolute' }}>
+            <defs>
+              <marker id="arrow-down" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 2 L 8 5 L 0 8" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </marker>
+            </defs>
+          </svg>
+
           {/* Fragmented Discovery — bottom-left */}
-          <div style={{ position: 'absolute', left: '8%', top: '58%' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#555', fontSize: '0.9rem' }}>
+          <div className="ps-label ps-label-1" style={{ position: 'absolute' }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#222', fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
               Fragmented Discovery
             </span>
-            <svg width="50" height="70" viewBox="0 0 50 70" style={{ display: 'block', marginTop: '4px', transform: 'rotate(15deg)' }}>
-              <path d="M10,70 Q8,30 45,8" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M35,3 L50,8 L40,22" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="220" height="270" className="ps-svg ps-svg-desktop" style={{ display: 'block', marginTop: '10px', marginLeft: '20px' }}>
+              <path d="M 20,20 Q 120,50 200,250" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
+            </svg>
+            <svg width="60" height="90" className="ps-svg ps-svg-mobile" style={{ display: 'none', margin: '4px auto 0' }}>
+              <path d="M 30,0 Q 50,45 30,85" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
             </svg>
           </div>
 
           {/* Disconnected Experience — center-left */}
-          <div style={{ position: 'absolute', left: '22%', top: '48%' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#555', fontSize: '0.9rem' }}>
+          <div className="ps-label ps-label-2" style={{ position: 'absolute' }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#222', fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
               Disconnected Experience
             </span>
-            <svg width="70" height="70" viewBox="0 0 70 70" style={{ display: 'block', marginTop: '4px', transform: 'rotate(40deg)' }}>
-              <path d="M10,70 Q8,30 60,8" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M50,3 L65,8 L55,22" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="150" height="330" className="ps-svg ps-svg-desktop" style={{ display: 'block', marginTop: '10px', marginLeft: '30px' }}>
+              <path d="M 20,20 Q 80,100 130,310" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
+            </svg>
+            <svg width="60" height="50" className="ps-svg ps-svg-mobile" style={{ display: 'none', margin: '4px auto 0' }}>
+              <path d="M 30,0 Q 10,25 30,45" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
             </svg>
           </div>
 
           {/* Clubs efforts — top-right */}
-          <div style={{ position: 'absolute', right: '22%', top: '45%' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#555', fontSize: '0.9rem' }}>
+          <div className="ps-label ps-label-3" style={{ position: 'absolute' }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#222', fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
               Clubs efforts to reach students
             </span>
-            <svg width="60" height="70" viewBox="0 0 60 70" style={{ display: 'block', marginTop: '4px', transform: 'rotate(-30deg) scaleX(-1)' }}>
-              <path d="M10,70 Q8,30 50,8" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M40,3 L55,8 L45,22" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="100" height="330" className="ps-svg ps-svg-desktop" style={{ display: 'block', marginTop: '10px', marginLeft: '20px' }}>
+              <path d="M 20,20 Q 60,100 80,310" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
+            </svg>
+            <svg width="60" height="60" className="ps-svg ps-svg-mobile" style={{ display: 'none', margin: '4px auto 0' }}>
+              <path d="M 30,0 Q 50,30 30,55" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
             </svg>
           </div>
 
           {/* Zero Personalization — far-right */}
-          <div style={{ position: 'absolute', right: '10%', top: '53%' }}>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#555', fontSize: '0.9rem' }}>
+          <div className="ps-label ps-label-4" style={{ position: 'absolute' }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, color: '#222', fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
               Zero Personalization
             </span>
-            <svg width="60" height="70" viewBox="0 0 60 70" style={{ display: 'block', marginTop: '4px', transform: 'rotate(-15deg) scaleX(-1)' }}>
-              <path d="M10,70 Q8,30 50,8" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M40,3 L55,8 L45,22" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="100" height="270" className="ps-svg ps-svg-desktop" style={{ display: 'block', marginTop: '10px', marginLeft: '-20px' }}>
+              <path d="M 80,20 Q 40,50 20,250" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
+            </svg>
+            <svg width="60" height="90" className="ps-svg ps-svg-mobile" style={{ display: 'none', margin: '4px auto 0' }}>
+              <path d="M 30,0 Q 10,45 30,85" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round" markerStart="url(#arrow-down)" />
             </svg>
           </div>
         </div>
@@ -282,6 +304,40 @@ const ProblemStory = () => {
           />
         ))}
       </div>
+      <style>{`
+        .ps-label {
+          white-space: nowrap;
+        }
+        
+        /* DESKTOP / LAPTOP ALIGNMENT (Default) */
+        .ps-label-1 { left: calc(50% - 420px); top: calc(50% + 0px); }
+        .ps-label-2 { left: calc(50% - 240px); top: calc(50% - 60px); }
+        .ps-label-3 { left: calc(50% + 40px); top: calc(50% - 60px); }
+        .ps-label-4 { left: calc(50% + 280px); top: calc(50% + 0px); }
+
+        @media (max-width: 768px) {
+          /* MOBILE ALIGNMENT */
+          .ps-label { 
+            white-space: normal !important;
+            max-width: 100px;
+            text-align: center;
+          }
+          .ps-label span {
+            font-size: 0.8rem !important;
+            line-height: 1.2;
+          }
+          .ps-label-1 { left: calc(50% - 170px); top: calc(50% - 20px); }
+          .ps-label-2 { left: calc(50% - 100px); top: calc(50% + 40px); }
+          .ps-label-3 { left: calc(50% + 0px); top: calc(50% + 40px); }
+          .ps-label-4 { left: calc(50% + 70px); top: calc(50% - 20px); }
+          
+          .ps-svg-desktop { display: none !important; }
+          .ps-svg-mobile { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .ps-svg-mobile { display: none !important; }
+        }
+      `}</style>
     </section>
   );
 };

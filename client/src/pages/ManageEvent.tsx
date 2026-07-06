@@ -1163,6 +1163,7 @@ function AnnouncementTab({ event, saveEvent }: { event: any, saveEvent: any }) {
 // -------------------------------------------------------------
 function SettingsTab({ event, saveEvent }: { event: any, saveEvent: any }) {
   const [visibility, setVisibility] = useState(event?.visibility || 'Public');
+  const [generateQRCode, setGenerateQRCode] = useState(event?.generateQRCode || false);
   const [regControl, setRegControl] = useState(event?.registrationControl || 'Require Approval');
 
   const [teamMembers, setTeamMembers] = useState<any[]>(event?.organizingTeam?.length > 0 ? event.organizingTeam : []);
@@ -1198,6 +1199,26 @@ function SettingsTab({ event, saveEvent }: { event: any, saveEvent: any }) {
                <option value="Private">Private</option>
                <option value="Unlisted">Unlisted</option>
             </select>
+         </div>
+       </div>
+
+       {/* QR Code Generation */}
+       <div>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: '#111' }}>QR Code Ticketing</h3>
+         </div>
+         <div style={{ border: '1px solid #eaeaea', padding: '12px 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#111' }}>Generate QR Code for Attendees</span>
+            <div 
+              onClick={async () => {
+                const newVal = !generateQRCode;
+                setGenerateQRCode(newVal);
+                await saveEvent({ generateQRCode: newVal });
+              }}
+              style={{ width: '40px', height: '24px', background: generateQRCode ? '#8B5CF6' : '#ccc', borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: '0.2s' }}
+            >
+              <div style={{ width: '18px', height: '18px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: generateQRCode ? '19px' : '3px', transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+            </div>
          </div>
        </div>
 

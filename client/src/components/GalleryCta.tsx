@@ -60,23 +60,38 @@ const GalleryCta = () => {
         justifyContent: 'center',
       }}
     >
+      <style>{`
+        .gc-grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+        @media (max-width: 768px) {
+          .gc-grid {
+            grid-template-columns: 1fr !important;
+            height: 400px !important;
+          }
+          .gc-side-col {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       <div
         ref={gridRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        className="gc-grid"
         style={{
           width: '100%',
           maxWidth: '1100px',
           height: '520px',
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
           gap: '1rem',
           cursor: 'pointer',
         }}
       >
 
         {/* ── COLUMN 1 (Left) ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+        <div className="gc-side-col" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
           <div ref={img1Ref} style={{
             height: '60%',
             borderRadius: '16px',
@@ -177,7 +192,7 @@ const GalleryCta = () => {
         </div>
 
         {/* ── COLUMN 3 (Right) ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+        <div className="gc-side-col" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
           <div ref={img3Ref} style={{
             height: '40%',
             borderRadius: '16px',

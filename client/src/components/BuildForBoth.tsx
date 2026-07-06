@@ -46,7 +46,8 @@ const BuildForBoth = () => {
 
         {/* ── LEFT CARD: Students ── */}
         <div style={{
-          width: '420px',
+          width: '100%',
+          maxWidth: '420px',
           height: '519px',
           borderRadius: '24px',
           background: 'linear-gradient(180deg, #f0abfc 0%, #f9a8d4 50%, #fbcfe8 100%)',
@@ -125,7 +126,8 @@ const BuildForBoth = () => {
 
         {/* ── RIGHT CARD: Clubs & Initiatives ── */}
         <div style={{
-          width: '420px',
+          width: '100%',
+          maxWidth: '420px',
           height: '519px',
           borderRadius: '24px',
           background: '#111',

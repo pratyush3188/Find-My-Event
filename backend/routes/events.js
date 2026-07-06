@@ -14,6 +14,7 @@ const PaidEventDetail = require('../models/PaidEventDetail');
 const ScannerLink = require('../models/ScannerLink');
 const crypto = require('crypto');
 const PaidRegistration = require('../models/PaidRegistration');
+const Registration = require('../models/Registration');
 
 // === Event Submission Routes (HEAD) ===
 
@@ -304,10 +305,23 @@ router.get('/registered', requireAuth, async (req, res) => {
     const submissions = await EventSubmission.find({ registeredUsers: req.user._id }).lean();
     const clubsEvents = await ClubsEvent.find({ registeredUsers: req.user._id }).lean();
     
+    const registrations = await Registration.find({ user: req.user._id }).lean();
+    const paidRegistrations = await PaidRegistration.find({ user: req.user._id }).lean();
+    
+    const getRollNo = (eventId) => {
+      const reg = registrations.find(r => r.event.toString() === eventId.toString()) || 
+                  paidRegistrations.find(r => r.event.toString() === eventId.toString());
+      if (reg && reg.customAnswers) {
+        const rollAnswer = reg.customAnswers.find(a => a.question && a.question.toLowerCase().includes('roll'));
+        if (rollAnswer) return rollAnswer.answer;
+      }
+      return null;
+    };
+    
     // Normalize format and add pricing
     const mappedSubmissions = await Promise.all(submissions.map(async (s) => {
       const pricing = await PaidEventDetail.findOne({ event: s._id }).lean();
-      const qrToken = jwt.sign({ userId: req.user._id, eventId: s._id, model: 'EventSubmission' }, process.env.JWT_SECRET || 'secret');
+      const qrToken = s.generateQRCode ? jwt.sign({ userId: req.user._id, eventId: s._id, model: 'EventSubmission' }, process.env.JWT_SECRET || 'secret') : null;
       return {
         ...s,
         date: s.startDate,
@@ -315,23 +329,25 @@ router.get('/registered', requireAuth, async (req, res) => {
         image: s.imageUrl,
         category: s.category || 'Special',
         pricing,
-        qrToken
+        qrToken,
+        rollNo: getRollNo(s._id)
       };
     }));
 
     const eventsWithPricing = await Promise.all(events.map(async (e) => {
       const pricing = await PaidEventDetail.findOne({ event: e._id }).lean();
-      const qrToken = jwt.sign({ userId: req.user._id, eventId: e._id, model: 'Event' }, process.env.JWT_SECRET || 'secret');
-      return { ...e, pricing, qrToken };
+      const qrToken = e.generateQRCode ? jwt.sign({ userId: req.user._id, eventId: e._id, model: 'Event' }, process.env.JWT_SECRET || 'secret') : null;
+      return { ...e, pricing, qrToken, rollNo: getRollNo(e._id) };
     }));
 
     const mappedClubsEvents = await Promise.all(clubsEvents.map(async (ce) => {
       const pricing = await PaidEventDetail.findOne({ event: ce._id }).lean();
-      const qrToken = jwt.sign({ userId: req.user._id, eventId: ce._id, model: 'ClubsEvent' }, process.env.JWT_SECRET || 'secret');
+      const qrToken = ce.generateQRCode ? jwt.sign({ userId: req.user._id, eventId: ce._id, model: 'ClubsEvent' }, process.env.JWT_SECRET || 'secret') : null;
       return {
         ...ce,
         pricing,
-        qrToken
+        qrToken,
+        rollNo: getRollNo(ce._id)
       };
     }));
 
@@ -594,22 +610,33 @@ router.post('/:id/register', requireAuth, async (req, res) => {
     event.registeredUsers.push(req.user._id);
     await event.save();
 
+    // Save custom answers for free registration
+    await Registration.create({
+      user: req.user._id,
+      event: event._id,
+      eventModel: modelName,
+      customAnswers: req.body.customAnswers || []
+    });
+
     // Generate QR Token and Image
-    const qrToken = jwt.sign({ 
-      userId: req.user._id, 
-      eventId: event._id, 
-      model: modelName
-    }, process.env.JWT_SECRET || 'secret');
-    
+    let qrToken = null;
     let qrDataUrl = '';
-    try {
-      qrDataUrl = await QRCode.toDataURL(qrToken, { width: 200, margin: 2 });
-    } catch (err) {
-      console.error('Error generating QR code:', err);
+    if (event.generateQRCode) {
+      qrToken = jwt.sign({ 
+        userId: req.user._id, 
+        eventId: event._id, 
+        model: modelName
+      }, process.env.JWT_SECRET || 'secret');
+      
+      try {
+        qrDataUrl = await QRCode.toDataURL(qrToken, { width: 200, margin: 2 });
+      } catch (err) {
+        console.error('Error generating QR code:', err);
+      }
     }
 
     // Send Ticket Confirmation Email
-    if (req.user.email && qrDataUrl) {
+    if (req.user.email) {
       try {
         const emailHtml = `
           <div style="font-family: Arial, sans-serif; text-align: center; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden;">
@@ -620,12 +647,13 @@ router.post('/:id/register', requireAuth, async (req, res) => {
             <div style="padding: 30px;">
               <p style="font-size: 16px; font-weight: bold;">Hello ${req.user.name || 'User'},</p>
               <p>Your registration for <strong>${event.title}</strong> is successful.</p>
+              ${event.generateQRCode ? `
               <p>Please present the digital ticket below at the entry gate.</p>
               
               <div style="background: #f8f9fc; padding: 20px; border-radius: 12px; display: inline-block; margin: 20px 0;">
                 <img src="cid:ticketqr" alt="Ticket QR Code" style="width: 200px; height: 200px; border-radius: 8px;" />
               </div>
-
+              ` : ''}
               <div style="text-align: left; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;">
                 <p><strong>Venue:</strong> ${event.venue || event.location}</p>
                 <p><strong>Date:</strong> ${event.date || event.startDate}</p>
@@ -637,19 +665,23 @@ router.post('/:id/register', requireAuth, async (req, res) => {
           </div>
         `;
 
-        const base64Data = qrDataUrl.split(';base64,').pop();
+        const attachments = [];
+        if (event.generateQRCode && qrDataUrl) {
+          const base64Data = qrDataUrl.split(';base64,').pop();
+          attachments.push({
+            filename: 'ticket-qr.png',
+            content: base64Data,
+            encoding: 'base64',
+            cid: 'ticketqr'
+          });
+        }
 
         await transporter.sendMail({
           from: '"Eventum" <' + process.env.GMAIL_USER + '>',
           to: req.user.email,
           subject: 'Your Ticket: ' + event.title,
           html: emailHtml,
-          attachments: [{
-            filename: 'ticket-qr.png',
-            content: base64Data,
-            encoding: 'base64',
-            cid: 'ticketqr'
-          }]
+          attachments: attachments
         });
       } catch (err) {
         console.error('Error sending ticket email:', err);

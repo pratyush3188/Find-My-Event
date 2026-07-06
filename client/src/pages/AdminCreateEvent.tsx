@@ -37,6 +37,7 @@ export default function AdminCreateEvent({ eventId }: { eventId?: string }) {
   const [maxTickets, setMaxTickets] = useState('');
   
   const [capacity, setCapacity] = useState('');
+  const [generateQRCode, setGenerateQRCode] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
@@ -86,6 +87,7 @@ export default function AdminCreateEvent({ eventId }: { eventId?: string }) {
             setMaxTickets(data.pricing?.maxTicketsPerUser?.toString() || '');
           }
           setCapacity(data.capacity?.toString() || data.seats?.toString() || '');
+          setGenerateQRCode(data.generateQRCode || false);
           
           if(data.image || data.imageUrl) {
             setImagePreview(data.image || data.imageUrl);
@@ -142,6 +144,7 @@ export default function AdminCreateEvent({ eventId }: { eventId?: string }) {
       formData.append('date', mappedDate);
       formData.append('venue', finalLocation);
       formData.append('seats', capacity || 'Limited');
+      formData.append('generateQRCode', String(generateQRCode));
       formData.append('price', ticketType === 'Paid' ? ticketPrice : 'Free');
       
       formData.append('isPaid', (ticketType === 'Paid').toString());
@@ -368,6 +371,20 @@ export default function AdminCreateEvent({ eventId }: { eventId?: string }) {
                  <Users size={20} color="#888" />
                  <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: 700, color: '#555' }}>Capacity</div>
                  <input placeholder="Unlimited" value={capacity} onChange={e => setCapacity(e.target.value)} style={{ background: 'transparent', border: 'none', textAlign: 'right', fontWeight: 700, color: '#555', width: '100px', outline: 'none' }} />
+              </div>
+
+              {/* Generate QR Code Toggle */}
+              <div style={{ background: '#eaeaea', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <Ticket size={20} color="#888" />
+                  <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: 700, color: '#555' }}>Generate QR Codes for Attendees</div>
+                </div>
+                <div 
+                  onClick={() => setGenerateQRCode(!generateQRCode)}
+                  style={{ width: '40px', height: '24px', background: generateQRCode ? '#8B5CF6' : '#ccc', borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: '0.2s' }}
+                >
+                  <div style={{ width: '18px', height: '18px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: generateQRCode ? '19px' : '3px', transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                </div>
               </div>
 
               <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

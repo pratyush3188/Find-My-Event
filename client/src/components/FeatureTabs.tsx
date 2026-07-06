@@ -42,6 +42,25 @@ const FeatureTabs = () => {
       alignItems: 'center'
     }}>
       
+      <style>{`
+        .ft-gallery {
+          height: 600px;
+        }
+        .ft-pill-btn {
+          font-size: 1rem;
+          padding: 0.8rem 1.5rem;
+        }
+        @media (max-width: 768px) {
+          .ft-gallery {
+            height: 350px !important;
+          }
+          .ft-pill-btn {
+            font-size: 0.85rem !important;
+            padding: 0.6rem 1rem !important;
+          }
+        }
+      `}</style>
+
       {/* ── HEADING ── */}
       <div style={{ width: '100%', maxWidth: '1200px', marginBottom: '2rem' }}>
         <h2 style={{
@@ -57,11 +76,10 @@ const FeatureTabs = () => {
       </div>
 
       {/* ── IMAGE GALLERY ── */}
-      <div style={{
+      <div className="ft-gallery" style={{
         position: 'relative',
         width: '100%',
         maxWidth: '1200px',
-        height: '600px', // Large display area
         borderRadius: '24px',
         overflow: 'hidden',
         boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
@@ -92,7 +110,7 @@ const FeatureTabs = () => {
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        gap: '1rem',
+        gap: '0.75rem',
         width: '100%',
         maxWidth: '1200px'
       }}>
@@ -101,15 +119,14 @@ const FeatureTabs = () => {
           return (
             <button
               key={index}
+              className="ft-pill-btn"
               onClick={() => handleTabClick(index)}
               style={{
-                padding: '0.8rem 1.5rem',
                 borderRadius: '999px',
                 border: 'none',
                 background: isActive ? '#fef3c7' : 'transparent', // Yellow-ish if active, transparent otherwise
                 color: isActive ? '#111' : '#666',
                 fontWeight: isActive ? 700 : 500,
-                fontSize: '1rem',
                 fontFamily: 'Inter, sans-serif',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',

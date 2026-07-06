@@ -10,6 +10,13 @@ const Home2 = () => {
   const heroRef = useRef<HTMLHeadingElement>(null);
   const marker1Ref = useRef<HTMLSpanElement>(null);
   const marker2Ref = useRef<HTMLSpanElement>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -138,6 +145,30 @@ const Home2 = () => {
         .marker-cyan {
           background-color: #49D8F6;
         }
+
+        /* Mobile Categories Horizontal Scroll */
+        @media (max-width: 768px) {
+          .categories-section { padding: 2rem 1.25rem !important; }
+          .categories-title { font-size: 1.35rem !important; margin-bottom: 1.25rem !important; }
+          .categories-grid { 
+            display: flex !important; 
+            overflow-x: auto !important; 
+            scroll-snap-type: x mandatory; 
+            gap: 1rem !important; 
+            padding-bottom: 1rem !important;
+            margin: 0 -1.25rem !important;
+            padding: 0 1.25rem 1rem 1.25rem !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .categories-grid::-webkit-scrollbar { display: none; }
+          .category-card { 
+            min-width: 100px !important; 
+            flex: 0 0 100px !important; 
+            scroll-snap-align: start; 
+          }
+          .category-icon { font-size: 2rem !important; }
+          .category-text { font-size: 0.75rem !important; }
+        }
       `}</style>
 
       {/* Hero Section */}
@@ -157,7 +188,7 @@ const Home2 = () => {
           </span>
         </h1>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '3rem', position: 'relative', height: '500px', width: '100%', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '3rem', position: 'relative', height: isMobile ? '400px' : '500px', width: '100%', overflow: 'hidden' }}>
           {[1, 2, 3, 4, 5].map((item, index) => {
             const offset = (index - activeIndex + 5) % 5;
 
@@ -172,16 +203,30 @@ const Home2 = () => {
             let height = '300px';
             let width = '15vw';
 
-            if (isCenter) {
-              zIndex = 10; left = '50%'; height = '480px'; width = '28vw';
-            } else if (isAdjLeft) {
-              zIndex = 5; left = '28%'; height = '380px'; width = '22vw';
-            } else if (isAdjRight) {
-              zIndex = 5; left = '72%'; height = '380px'; width = '22vw';
-            } else if (isFarLeft) {
-              zIndex = 2; left = '10%'; height = '300px'; width = '18vw';
-            } else if (isFarRight) {
-              zIndex = 2; left = '90%'; height = '300px'; width = '18vw';
+            if (isMobile) {
+              if (isCenter) {
+                zIndex = 10; left = '50%'; height = '360px'; width = '60vw';
+              } else if (isAdjLeft) {
+                zIndex = 5; left = '15%'; height = '280px'; width = '45vw';
+              } else if (isAdjRight) {
+                zIndex = 5; left = '85%'; height = '280px'; width = '45vw';
+              } else if (isFarLeft) {
+                zIndex = 2; left = '-15%'; height = '220px'; width = '35vw';
+              } else if (isFarRight) {
+                zIndex = 2; left = '115%'; height = '220px'; width = '35vw';
+              }
+            } else {
+              if (isCenter) {
+                zIndex = 10; left = '50%'; height = '480px'; width = '28vw';
+              } else if (isAdjLeft) {
+                zIndex = 5; left = '28%'; height = '380px'; width = '22vw';
+              } else if (isAdjRight) {
+                zIndex = 5; left = '72%'; height = '380px'; width = '22vw';
+              } else if (isFarLeft) {
+                zIndex = 2; left = '10%'; height = '300px'; width = '18vw';
+              } else if (isFarRight) {
+                zIndex = 2; left = '90%'; height = '300px'; width = '18vw';
+              }
             }
 
             return (
@@ -219,12 +264,13 @@ const Home2 = () => {
       </section>
 
       {/* Categories Section */}
-      <section style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem 2.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '2rem' }}>Explore Events Categories</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.5rem' }}>
+      <section className="categories-section" style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem 2.5rem' }}>
+        <h2 className="categories-title" style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '2rem' }}>Explore Events Categories</h2>
+        <div className="categories-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.5rem' }}>
           {categories.map((cat) => (
             <motion.div
               key={cat.name}
+              className="category-card"
               whileHover={{ y: -5 }}
               style={{
                 background: '#fff',
@@ -242,8 +288,8 @@ const Home2 = () => {
               }}
             >
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: `linear-gradient(to top, ${cat.color}88, transparent)` }} />
-              <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem', zIndex: 1 }}>{cat.icon}</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, zIndex: 1, textAlign: 'center' }}>{cat.name}</span>
+              <span className="category-icon" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', zIndex: 1 }}>{cat.icon}</span>
+              <span className="category-text" style={{ fontSize: '0.8rem', fontWeight: 600, zIndex: 1, textAlign: 'center' }}>{cat.name}</span>
             </motion.div>
           ))}
         </div>

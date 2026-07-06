@@ -76,6 +76,14 @@ const Navbar: React.FC = () => {
   const textColor   = isInnerPage ? '#ffffff' : '#222';
   const logoSrc     = isInnerPage ? (darkLogo) : darkLogo;
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <>
       <div
@@ -100,7 +108,7 @@ const Navbar: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 3rem',
+            padding: isMobile ? '0 1.25rem' : '0 3rem',
             pointerEvents: 'auto', // Re-enable clicks for the actual navbar
           }}
         >
@@ -233,7 +241,7 @@ const Navbar: React.FC = () => {
                       {[
                         { icon: Settings, label: 'General Settings', href: '#settings' },
                         { icon: User,     label: 'Edit Profile',      href: '#edit-profile' },
-                        { icon: Calendar, label: 'Your Events',       href: '#your-events' },
+                        ...( (user?.role === 'admin' || user?.role === 'organizer') ? [{ icon: Calendar, label: 'Your Events', href: '#your-events' }] : [] ),
                         { icon: Calendar, label: 'Registered Events', href: '#registered-events' },
                         { icon: Heart,    label: 'Favourites',        href: '#favourites' },
                       ].map(item => (
@@ -290,7 +298,13 @@ const Navbar: React.FC = () => {
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: isInnerPage ? '#fff' : '#222', display: 'flex', alignItems: 'center' }}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {isMobileMenuOpen ? (
+              <X size={24} />
+            ) : isLoggedIn ? (
+              <img src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} alt="Avatar" style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isInnerPage ? 'rgba(255,255,255,0.8)' : '#8B5CF6'}` }} />
+            ) : (
+              <Menu size={24} />
+            )}
           </button>
         </div>
       </nav>
@@ -300,11 +314,11 @@ const Navbar: React.FC = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
+            initial={{ opacity: 0, y: -16, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -16, x: '-50%' }}
             style={{
-              position: 'fixed', top: '5rem', left: '50%', transform: 'translateX(-50%)',
+              position: 'fixed', top: '5rem', left: '50%',
               width: 'min(94%, 420px)',
               background: isInnerPage ? 'var(--bg-card)' : 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(20px)', borderRadius: '24px',
@@ -314,38 +328,69 @@ const Navbar: React.FC = () => {
               display: 'flex', flexDirection: 'column', gap: '0.65rem',
             }}
           >
-            {navLinks.map(link => (
-              <a key={link.name} href={link.href} onClick={() => setIsMobileMenuOpen(false)}
-                style={{ textDecoration: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1.1rem', padding: '0.4rem 0' }}>
-                {link.name}
-              </a>
-            ))}
-            {isLoggedIn && (
-              <>
-                <button type="button" onClick={() => { window.location.hash = '#create-event'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', padding: '0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Plus size={16} /> Create Event
-                </button>
-                <button type="button" onClick={() => { window.location.hash = '#settings'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', padding: '0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Settings size={16} /> Settings
-                </button>
-                <button type="button" onClick={() => { window.location.hash = '#your-events'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', padding: '0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Calendar size={16} /> Your Events
-                </button>
-              </>
-            )}
-            <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '0.85rem', marginTop: '0.25rem' }}>
-              {isLoggedIn ? (
-                <button type="button" onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                  style={{ width: '100%', background: '#ef4444', color: '#fff', border: 'none', padding: '0.85rem', borderRadius: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  <LogOut size={18} /> Sign Out
-                </button>
-              ) : (
+            {/* Guest / New User Value Banner */}
+            {!isLoggedIn && (
+              <div style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.08))', padding: '1.25rem 1rem', borderRadius: '16px', marginBottom: '0.5rem', textAlign: 'center', border: '1px solid rgba(139,92,246,0.15)' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>🚀</div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: isInnerPage ? '#fff' : '#111', margin: '0 0 0.4rem 0', letterSpacing: '-0.01em' }}>Unlock More Features!</h3>
+                <p style={{ fontSize: '0.85rem', color: isInnerPage ? '#aaa' : '#555', margin: '0 0 1.25rem 0', lineHeight: 1.5 }}>Discover personalized events, track clubs, and manage tickets seamlessly.</p>
                 <button type="button" onClick={() => { window.location.hash = '#signin'; setIsMobileMenuOpen(false); }}
-                  style={{ width: '100%', background: '#111', color: '#fff', border: 'none', padding: '0.85rem', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ width: '100%', background: 'linear-gradient(90deg, #8B5CF6, #EC4899)', color: '#fff', border: 'none', padding: '0.85rem', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 8px 16px rgba(236,72,153,0.25)', transition: 'transform 0.2s' }}>
                   Get Started
                 </button>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Logged in User Profile Header */}
+            {isLoggedIn && (
+               <div style={{ padding: '0.25rem 0.5rem 1.25rem', borderBottom: `1px solid ${isInnerPage ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                 <img src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} alt="Avatar" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isInnerPage ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)'}` }} />
+                 <div style={{ overflow: 'hidden' }}>
+                   <div style={{ fontWeight: 800, fontSize: '1.05rem', color: isInnerPage ? '#fff' : '#111', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user?.name || 'User'}</div>
+                   <div style={{ fontSize: '0.8rem', color: isInnerPage ? '#aaa' : '#777', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user?.email || ''}</div>
+                 </div>
+               </div>
+            )}
+
+            {/* Nav Links */}
+            {navLinks.map(link => (
+              <a key={link.name} href={link.href} onClick={() => setIsMobileMenuOpen(false)}
+                style={{ textDecoration: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1.05rem', padding: '0.5rem 0.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ color: '#8B5CF6', opacity: 0.8 }}><ChevronDown size={14} style={{ transform: 'rotate(-90deg)' }}/></span> {link.name}
+              </a>
+            ))}
+            
+            {/* Logged-in Extra Options */}
+            {isLoggedIn && (
+              <>
+                {(user?.role === 'admin' || user?.role === 'organizer') && (
+                  <button type="button" onClick={() => { window.location.hash = '#create-event'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1.05rem', cursor: 'pointer', padding: '0.5rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '8px' }}>
+                    <span style={{ color: '#EC4899', opacity: 0.8 }}><Plus size={16} /></span> Create Event
+                  </button>
+                )}
+                <button type="button" onClick={() => { window.location.hash = '#edit-profile'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1.05rem', cursor: 'pointer', padding: '0.5rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '8px' }}>
+                  <span style={{ color: '#8B5CF6', opacity: 0.8 }}><User size={16} /></span> Edit Profile
+                </button>
+                <button type="button" onClick={() => { window.location.hash = '#settings'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1.05rem', cursor: 'pointer', padding: '0.5rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '8px' }}>
+                  <span style={{ color: '#8B5CF6', opacity: 0.8 }}><Settings size={16} /></span> Settings
+                </button>
+                {(user?.role === 'admin' || user?.role === 'organizer') && (
+                  <button type="button" onClick={() => { window.location.hash = '#your-events'; setIsMobileMenuOpen(false); }} style={{ textAlign: 'left', background: 'none', border: 'none', color: isInnerPage ? '#fff' : '#111', fontWeight: 600, fontSize: '1.05rem', cursor: 'pointer', padding: '0.5rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '8px' }}>
+                    <span style={{ color: '#EC4899', opacity: 0.8 }}><Calendar size={16} /></span> Your Events
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Logged-in Signout */}
+            {isLoggedIn && (
+              <div style={{ borderTop: `1px solid ${isInnerPage ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`, paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                  style={{ width: '100%', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '0.85rem', borderRadius: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <LogOut size={18} /> Sign Out
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

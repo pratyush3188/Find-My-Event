@@ -27,7 +27,7 @@ const ClubCard = ({ club }: { club: any }) => (
       height: '100%'
     }}
   >
-    <div style={{ width: '110px', height: '110px', flexShrink: 0, borderRadius: '16px', overflow: 'hidden', background: '#f4f4f5', border: '1px solid rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="club-card-logo" style={{ width: '110px', height: '110px', flexShrink: 0, borderRadius: '16px', overflow: 'hidden', background: '#f4f4f5', border: '1px solid rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <motion.img 
         variants={{ initial: { scale: 1 }, hover: { scale: 1.05 } }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -128,6 +128,18 @@ export default function Clubs() {
         .marker-cyan {
           background-color: #49D8F6;
         }
+        
+        @media (max-width: 768px) {
+          .clubs-hero-section { padding: 6rem 1.25rem 2.5rem !important; }
+          .clubs-hero-img { height: 260px !important; border-radius: 24px !important; }
+          
+          .clubs-section-container { padding: 0 1.25rem !important; margin-bottom: 3rem !important; }
+          .clubs-section-title { font-size: 2.25rem !important; margin-bottom: 1.5rem !important; }
+          
+          .clubs-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .club-card-container { padding: 1rem !important; gap: 1rem !important; }
+          .club-card-logo { width: 85px !important; height: 85px !important; border-radius: 12px !important; }
+        }
       `}</style>
 
       {/* Background Gradient */}
@@ -145,7 +157,7 @@ export default function Clubs() {
       <main style={{ position: 'relative', zIndex: 1 }}>
         
         {/* Massive Hero Section */}
-        <section style={{ padding: '8rem 2rem 4rem', textAlign: 'center', maxWidth: '1400px', margin: '0 auto', position: 'relative' }}>
+        <section className="clubs-hero-section" style={{ padding: '8rem 2rem 4rem', textAlign: 'center', maxWidth: '1400px', margin: '0 auto', position: 'relative' }}>
           
           <h1 ref={heroRef} className="premium-hero-heading">
             <span className="hero-line">
@@ -170,6 +182,7 @@ export default function Clubs() {
               transition={{ duration: 1.5, ease: 'easeOut' }}
               src="/jecrc_image.png" 
               alt="JECRC University Campus" 
+              className="clubs-hero-img"
               style={{ width: '100%', height: '500px', objectFit: 'cover', display: 'block' }} 
             />
           </div>
@@ -177,14 +190,14 @@ export default function Clubs() {
 
         {/* All Initiatives Section */}
         {initiativesList.length > 0 && (
-          <section style={{ maxWidth: '1440px', margin: '2rem auto 4rem', padding: '0 2.5rem' }}>
+          <section className="clubs-section-container" style={{ maxWidth: '1440px', margin: '2rem auto 4rem', padding: '0 2.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
-              <h2 style={{ fontSize: '3rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", color: '#111', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
+              <h2 className="clubs-section-title" style={{ fontSize: '3rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", color: '#111', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
                 All Initiatives
               </h2>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
+            <div className="clubs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
               {initiativesList.map((club) => (
                 <ClubCard key={club.id} club={club} />
               ))}
@@ -194,14 +207,14 @@ export default function Clubs() {
 
         {/* All Clubs Section */}
         {clubsList.length > 0 && (
-          <section style={{ maxWidth: '1440px', margin: '2rem auto 6rem', padding: '0 2.5rem' }}>
+          <section className="clubs-section-container" style={{ maxWidth: '1440px', margin: '2rem auto 6rem', padding: '0 2.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
-              <h2 style={{ fontSize: '3rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", color: '#111', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
+              <h2 className="clubs-section-title" style={{ fontSize: '3rem', fontWeight: 700, fontFamily: "'Inter', sans-serif", color: '#111', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
                 All Clubs
               </h2>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
+            <div className="clubs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
               {clubsList.map((club) => (
                 <ClubCard key={club.id} club={club} />
               ))}
