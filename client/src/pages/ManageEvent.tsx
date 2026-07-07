@@ -896,7 +896,7 @@ function ParticipantsTab({ event }: { event: any }) {
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'detailed'>('list');
-  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({});
+
 
   useEffect(() => {
     let interval: any;
