@@ -24,6 +24,15 @@ const registrationSchema = new mongoose.Schema({
     question: String,
     answer: mongoose.Schema.Types.Mixed
   }],
+  teamMembers: [{
+    name: String,
+    email: String,
+    phone: String,
+    customAnswers: [{
+      question: String,
+      answer: mongoose.Schema.Types.Mixed
+    }]
+  }],
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],

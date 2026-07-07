@@ -180,7 +180,7 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
             <span style={{ display: 'inline-block', background: '#f3e8ff', color: '#9333ea', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', width: 'fit-content' }}>
               {club.tags?.[0] || club.type || 'Entrepreneurship'}
             </span>
-            <h1 className="club-title" style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+            <h1 className="club-title" style={{ fontSize: '2.5rem', fontWeight: 700, lineHeight: 1.1, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
               {club.name}
             </h1>
             <p style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500, marginBottom: '2rem' }}>
@@ -195,10 +195,10 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
                   <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#111', lineHeight: 1.2, marginTop: '2px' }}>Yr</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>
                     {club.foundedOn ? new Date(club.foundedOn).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Not Listed'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Founded On</div>
+                  <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Founded On</div>
                 </div>
               </div>
 
@@ -207,8 +207,8 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
                   <MapPin size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>{club.venue || 'Not Listed'}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Venue</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>{club.venue || 'Not Listed'}</div>
+                  <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Venue</div>
                 </div>
               </div>
 
@@ -217,23 +217,23 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
                   <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>{club.eventsConducted || '0'}</span>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>{club.eventsConducted || '0'} Events Conducted</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Total Events</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>{club.eventsConducted || '0'} Events Conducted</div>
+                  <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Total Events</div>
                 </div>
               </div>
             </div>
 
             {/* About */}
             <div style={{ marginBottom: '2.5rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: '#0f172a' }}>About</h2>
-              <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, fontWeight: 500, whiteSpace: 'pre-wrap' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.75rem', color: '#0f172a' }}>About</h2>
+              <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.6, fontWeight: 500, whiteSpace: 'pre-wrap' }}>
                 {club.detailedDescription || club.aboutUs || 'Not Listed'}
               </p>
             </div>
 
             {/* Leadership & Team */}
             <div style={{ marginBottom: '3rem' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', color: '#0f172a' }}>Leadership & Team</h2>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem', color: '#0f172a' }}>Leadership & Team</h2>
               {!club.leadership || club.leadership.length === 0 ? (
                 <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>Not Listed</div>
               ) : (
@@ -250,8 +250,8 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
                         )}
                       </div>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>{leader.name || 'Not Listed'}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>{leader.position || 'Not Listed'}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{leader.name || 'Not Listed'}</div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>{leader.position || 'Not Listed'}</div>
                       </div>
                     </div>
                   ))}
@@ -299,16 +299,16 @@ export default function ClubDetail({ hash }: ClubDetailProps) {
                     <img src={event.image || event.imageUrl || '/event1.png'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div style={{ padding: '1rem', background: '#f8fafc', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <Calendar size={12} /> {event.date || event.startDate || 'TBA'}
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <Calendar size={14} /> {event.date || event.startDate || 'TBA'}
                     </div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem', lineHeight: 1.3 }}>
                       {event.title}
                     </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500, display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem', flexGrow: 1 }}>
-                      <MapPin size={12} /> {event.venue || event.location || 'TBA'}
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500, display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem', flexGrow: 1 }}>
+                      <MapPin size={14} /> {event.venue || event.location || 'TBA'}
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.7rem', fontWeight: 600 }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.8rem', fontWeight: 600 }}>
                       <span style={{ color: '#475569' }}>{event.capacity || event.seats || '69'} Seats left</span>
                       <span style={{ color: '#cbd5e1' }}>|</span>
                       <span style={{ color: '#ef4444' }}>{event.pricing?.isPaid ? `₹${event.pricing.ticketPrice}` : (event.price || 'Free')}</span>

@@ -7,6 +7,7 @@ const PaidEventDetail = require('../models/PaidEventDetail');
 const PaidRegistration = require('../models/PaidRegistration');
 const Event = require('../models/Event');
 const EventSubmission = require('../models/EventSubmission');
+const User = require('../models/User');
 
 const razorpay = new Razorpay({
   key_id: (process.env.RAZORPAY_KEY_ID || '').trim(),
@@ -38,6 +39,11 @@ router.post('/create-order', requireAuth, async (req, res) => {
 
     if (existingRegistration || isAlreadyInRegisteredList) {
       return res.status(400).json({ message: 'You have already registered for this event' });
+    }
+
+    // Update user's phone number if provided in the registration form
+    if (req.body.teamMembers && req.body.teamMembers[0] && req.body.teamMembers[0].phone) {
+      await User.findByIdAndUpdate(req.user._id, { phone: req.body.teamMembers[0].phone });
     }
 
     // 2. Get Event Pricing Details

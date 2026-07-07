@@ -5,9 +5,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const CARDS = [
-  'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1563242048-0c6e9a0fce6b?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=600&auto=format&fit=crop',
+  '/event1.png',
+  '/event2.png',
+  '/event1.png',
 ];
 
 const LaunchSteps = () => {
@@ -69,12 +69,13 @@ const LaunchSteps = () => {
       gsap.set(desc1Ref.current, { opacity: 1, y: 0 });
       gsap.set([desc2Ref.current, desc3Ref.current], { opacity: 0, y: 20 });
 
+      const isMobile = window.innerWidth <= 768;
       // ── MASTER TIMELINE ──
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
-          end: '+=250%', // 2.5 screens of scrolling (slower, smoother)
+          end: isMobile ? '+=100%' : '+=250%',
           scrub: 1,
           pin: true,
           anticipatePin: 1
@@ -246,7 +247,7 @@ const LaunchSteps = () => {
         <svg width="2" height="150" style={{ marginTop: '2rem' }}>
           <path 
             ref={linePathRef}
-            d="M1 0 V150" 
+            d="M1 150 V0" 
             stroke="#111" 
             strokeWidth="2" 
             fill="none" 
@@ -304,10 +305,13 @@ const LaunchSteps = () => {
               position: 'absolute',
               width: '100%',
               borderRadius: '24px',
-              background: `url(${img}) center/cover no-repeat`,
               boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-              willChange: 'transform, opacity'
-            }} />
+              willChange: 'transform, opacity',
+              overflow: 'hidden',
+              background: '#111'
+            }}>
+              <img src={img} alt={`Step ${i+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
           ))}
         </div>
 

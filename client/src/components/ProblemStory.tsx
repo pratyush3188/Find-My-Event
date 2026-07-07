@@ -60,7 +60,7 @@ const ProblemStory = () => {
           scrollTrigger: {
             trigger: containerRef.current,
             start: 'top top',
-            end: '+=250%', // 2.5 screens of scrolling
+            end: isMobile ? '+=100%' : '+=250%',
             scrub: 1,
             pin: true,
             anticipatePin: 1

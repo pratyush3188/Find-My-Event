@@ -1111,38 +1111,36 @@ function ParticipantsTab({ event }: { event: any }) {
                          )}
 
                          {p.isTeam && p.teamMembers && p.teamMembers.length > 1 && (
-                            <div style={{ marginTop: '1rem', borderTop: '1px solid #eaeaea', paddingTop: '1rem' }}>
-                               <button 
-                                 onClick={() => setExpandedTeams(prev => ({...prev, [p.id]: !prev[p.id]}))}
-                                 style={{ width: '100%', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569', fontSize: '0.85rem' }}
-                               >
-                                 {expandedTeams[p.id] ? 'Hide Team Members ↑' : `View All Team Members (${p.teamMembers.length - 1}) ↓`}
-                               </button>
-                               
-                               {expandedTeams[p.id] && (
-                                 <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ marginTop: '1.5rem', borderTop: '2px dashed #eaeaea', paddingTop: '1rem' }}>
+                                 <h5 style={{ margin: '0 0 12px 0', fontSize: '0.95rem', color: '#111', fontWeight: 800 }}>Other Team Members</h5>
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     {p.teamMembers.slice(1).map((m: any, mIdx: number) => (
-                                      <div key={mIdx} style={{ background: '#F1F5F9', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1E293B', display: 'flex', justifyContent: 'space-between' }}>
+                                      <div key={mIdx} style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1E293B', display: 'flex', justifyContent: 'space-between' }}>
                                            <span>{m.name}</span>
-                                           <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Member {mIdx + 2}</span>
+                                           <span style={{ fontSize: '0.75rem', color: '#64748B', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px' }}>Member {mIdx + 2}</span>
                                         </div>
-                                        <div style={{ fontSize: '0.8rem', color: '#64748B', margin: '2px 0 8px 0' }}>{m.email} • {m.phone || 'N/A'}</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#475569', margin: '4px 0 10px 0', fontWeight: 600 }}>{m.email} {m.phone ? `• ${m.phone}` : ''}</div>
                                         
                                         {m.customAnswers && m.customAnswers.length > 0 && (
                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-                                             {m.customAnswers.map((ans: any, aIdx: number) => (
-                                               <div key={aIdx} style={{ background: '#ffffff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
-                                                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B' }}>{ans.question}</span>
-                                                  <span style={{ fontSize: '0.85rem', color: '#0F172A', fontWeight: 500 }}>{ans.answer || 'N/A'}</span>
+                                             {m.customAnswers.map((ans: any, aIdx: number) => {
+                                               const isLink = ans.answer && typeof ans.answer === 'string' && (ans.answer.startsWith('http') || ans.answer.startsWith('blob:'));
+                                               return (
+                                               <div key={aIdx} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '6px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
+                                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', marginBottom: '4px' }}>{ans.question}</span>
+                                                  {isLink ? (
+                                                    <a href={ans.answer} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', textDecoration: 'none' }}>View File</a>
+                                                  ) : (
+                                                    <span style={{ fontSize: '0.85rem', color: '#0F172A', fontWeight: 600 }}>{ans.answer || 'N/A'}</span>
+                                                  )}
                                                </div>
-                                             ))}
+                                             )})}
                                            </div>
                                         )}
                                       </div>
                                     ))}
                                  </div>
-                               )}
                             </div>
                          )}
                        </div>
@@ -1153,7 +1151,7 @@ function ParticipantsTab({ event }: { event: any }) {
                                 await api.delete(`/events/${event._id || event.id}/participants/${p.id}`);
                                 alert('Participant deregistered successfully!');
                                 window.location.reload();
-                              } catch(err) { alert('Failed to deregister'); }
+                              } catch(err: any) { alert(`Failed to deregister: ${err.response?.data?.message || err.message}`); }
                             }
                           }} style={{ flex: 1, background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
                             Deregister
@@ -1249,9 +1247,10 @@ function SettingsTab({ event, saveEvent }: { event: any, saveEvent: any }) {
          await api.delete(`/events/submission/${event._id || event.id}`);
          alert('Event Cancelled Successfully');
          window.location.hash = '#organizer-dashboard/my-events';
-      } catch (err) {
+      } catch (err: any) {
          console.error(err);
-         alert('Failed to cancel event.');
+         const errorMessage = err.response?.data?.message || err.message || 'Failed to cancel event.';
+         alert(`Error: ${errorMessage}`);
       }
     }
   };
@@ -1421,9 +1420,10 @@ export default function ManageEvent() {
         }
         throw err;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save', err);
-      alert('Failed to save changes');
+      const errorMessage = err.response?.data?.message || err.message || 'Unknown error';
+      alert(`Failed to save changes: ${errorMessage}`);
       return false;
     }
   };

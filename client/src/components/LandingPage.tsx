@@ -970,7 +970,7 @@ const HowItWorksSection = () => {
               <img src="/event2.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Step 2" />
             </div>
 
-            {/* Card 3 (Using Ticket style) */}
+            {/* Card 3 (Using Photo style) */}
             <div
               ref={el => { cardsRef.current[2] = el; }}
               style={{
@@ -978,18 +978,10 @@ const HowItWorksSection = () => {
                 borderRadius: '24px', overflow: 'hidden',
                 boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)',
                 transformOrigin: 'bottom left',
-                willChange: 'transform, opacity',
-                background: 'linear-gradient(135deg, #180828 0%, #0c0214 100%)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff'
+                willChange: 'transform, opacity'
               }}
             >
-              <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(139,92,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                  <Check size={24} color="#C084FC" strokeWidth={3} />
-                </div>
-                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 0.5rem' }}>Successfully Registered!</h4>
-                <p style={{ color: '#9CA3AF', margin: 0 }}>Ticket #EVT-2026</p>
-              </div>
+              <img src="/event1.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Step 3" />
             </div>
           </div>
 

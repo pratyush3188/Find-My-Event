@@ -15,6 +15,7 @@ const ScannerLink = require('../models/ScannerLink');
 const crypto = require('crypto');
 const PaidRegistration = require('../models/PaidRegistration');
 const Registration = require('../models/Registration');
+const User = require('../models/User');
 
 // === Event Submission Routes (HEAD) ===
 
@@ -87,6 +88,43 @@ router.get('/submission/:id', requireAuth, async (req, res) => {
   }
 });
 
+router.delete('/submission/:id', requireAuth, async (req, res) => {
+  try {
+    let s = await EventSubmission.findById(req.params.id);
+    let eventModel = EventSubmission;
+    let isClubsEvent = false;
+    let isEvent = false;
+
+    if (!s) {
+      const ClubsEvent = require('../models/ClubsEvent');
+      s = await ClubsEvent.findById(req.params.id);
+      eventModel = ClubsEvent;
+      isClubsEvent = true;
+    }
+
+    if (!s) {
+      s = await Event.findById(req.params.id);
+      eventModel = Event;
+      isEvent = true;
+    }
+
+    if (!s) return res.status(404).json({ message: 'Event not found' });
+
+    let isOwner = (s.createdBy && s.createdBy.toString() === req.user._id.toString()) || 
+                  (s.organizer && s.organizer.toString() === req.user._id.toString()) ||
+                  (s.organizer && req.user.name && s.organizer.toString().toLowerCase() === req.user.name.toLowerCase());
+
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: You can only delete your own events' });
+    }
+
+    await eventModel.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Event deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.put('/submission/:id', requireAuth, upload.single('image'), async (req, res) => {
   try {
     let s = await EventSubmission.findById(req.params.id);
@@ -101,12 +139,9 @@ router.put('/submission/:id', requireAuth, upload.single('image'), async (req, r
     if (!s) return res.status(404).json({ message: 'Not found' });
     
     // Only the organizer (or an admin) can update their event
-    let isOwner = false;
-    if (isClubsEvent) {
-      isOwner = s.createdBy.toString() === req.user._id.toString();
-    } else {
-      isOwner = s.organizer.toString() === req.user._id.toString();
-    }
+    let isOwner = (s.createdBy && s.createdBy.toString() === req.user._id.toString()) || 
+                  (s.organizer && s.organizer.toString() === req.user._id.toString()) ||
+                  (s.organizer && req.user.name && s.organizer.toString().toLowerCase() === req.user.name.toLowerCase());
 
     if (!isOwner && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Forbidden: You can only edit your own events' });
@@ -569,12 +604,9 @@ router.get('/:id', softAuth, async (req, res) => {
       if (!req.user) {
         return res.status(403).json({ message: 'This event is private.' });
       }
-      let isOwner = false;
-      if (eventModel === 'ClubsEvent') {
-        isOwner = event.createdBy?.toString() === req.user._id.toString();
-      } else {
-        isOwner = event.organizer?.toString() === req.user._id.toString();
-      }
+      const isOwner = (event.createdBy && event.createdBy.toString() === req.user._id.toString()) || 
+                      (event.organizer && req.user.name && event.organizer.toLowerCase() === req.user.name.toLowerCase());
+      
       if (!isOwner && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'This event is private.' });
       }
@@ -691,10 +723,13 @@ router.delete('/:id/participants/:userId', requireAuth, async (req, res) => {
 
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
-    // Ensure authorized (admin or event creator)
-    const isAdmin = req.user.role === 'admin';
-    const isOwner = event.organizer?.toString() === req.user._id.toString() || event.createdBy?.toString() === req.user._id.toString();
-    if (!isAdmin && !isOwner) {
+    // Ensure authorized (admin, organizer, club_admin, user, or event creator)
+    const allowedRoles = ['admin', 'organizer', 'club_admin', 'user'];
+    const hasRole = allowedRoles.includes(req.user.role);
+    const isOwner = (event.createdBy && event.createdBy.toString() === req.user._id.toString()) || 
+                    (event.organizer && req.user.name && event.organizer.toLowerCase() === req.user.name.toLowerCase());
+    
+    if (!hasRole && !isOwner) {
       return res.status(403).json({ message: 'Not authorized to manage this event' });
     }
 
@@ -743,10 +778,15 @@ router.post('/:id/register', requireAuth, async (req, res) => {
       return res.status(400).json({ message: 'Already registered for this event' });
     }
 
+    // Update user's phone number if provided in the registration form
+    if (req.body.teamMembers && req.body.teamMembers[0] && req.body.teamMembers[0].phone) {
+      await User.findByIdAndUpdate(req.user._id, { phone: req.body.teamMembers[0].phone });
+    }
+
     event.registeredUsers.push(req.user._id);
     await event.save();
 
-    // Save custom answers for free registration
+    // Save custom answers and team members for free registration
     await Registration.create({
       user: req.user._id,
       event: event._id,

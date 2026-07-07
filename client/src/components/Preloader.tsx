@@ -55,15 +55,15 @@ const Preloader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
         style={{
-          fontSize: '1.75rem',
-          fontWeight: 800,
+          fontSize: '2rem',
+          fontWeight: 600,
           letterSpacing: '0.15em',
           color: '#000',
           margin: 0,
           fontFamily: 'Inter, sans-serif'
         }}
       >
-        EVENTUM
+        Eventum
       </motion.h1>
     </motion.div>
   );

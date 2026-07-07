@@ -39,6 +39,19 @@ const paidRegistrationSchema = new mongoose.Schema({
     required: true,
     default: 1
   },
+  customAnswers: [{
+    question: String,
+    answer: mongoose.Schema.Types.Mixed
+  }],
+  teamMembers: [{
+    name: String,
+    email: String,
+    phone: String,
+    customAnswers: [{
+      question: String,
+      answer: mongoose.Schema.Types.Mixed
+    }]
+  }],
   status: {
     type: String,
     enum: ['pending', 'completed', 'failed'],

@@ -57,6 +57,7 @@ const Home2 = () => {
 
   const [eventsList, setEventsList] = useState<any[]>([]);
   const [clubs, setClubs] = useState<any[]>([]);
+  const [showAllClubs, setShowAllClubs] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,6 +100,8 @@ const Home2 = () => {
   }, []);
 
   const filteredEvents = eventsList.filter(ev => activeCategory === 'All' || ev.category === activeCategory);
+  
+  const displayedClubs = showAllClubs ? clubs : clubs.filter(c => c.type === 'Initiative');
 
   return (
     <div className="home2-page" style={{ background: '#FFFFFF', minHeight: '100vh', color: '#111', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -299,10 +302,21 @@ const Home2 = () => {
       <section style={{ maxWidth: '1440px', margin: '0 auto', padding: '3rem 2.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Explore Clubs in JECRC</h2>
-          <button style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer' }}>more...</button>
+          <button 
+            onClick={() => {
+              if (!showAllClubs) {
+                setShowAllClubs(true);
+              } else {
+                window.location.hash = '#clubs'; // Ensure this matches your clubs route if you have one
+              }
+            }}
+            style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: '#8B5CF6' }}
+          >
+            {showAllClubs ? 'Go to Clubs Page →' : 'view more...'}
+          </button>
         </div>
         <div style={{ display: 'flex', gap: '2rem', overflowX: 'auto', paddingBottom: '1rem' }}>
-          {clubs.map(club => (
+          {displayedClubs.map(club => (
             <div
               key={club.id}
               onClick={() => window.location.hash = `#club-detail-${club.id}`}
@@ -374,20 +388,22 @@ const Home2 = () => {
                 <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <div style={{ color: '#007BFF', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    {event.date} | 4:45 am
+                    {event.date || event.startDate || 'TBA'}
                   </div>
 
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111', lineHeight: 1.3, marginBottom: '0.6rem' }}>{event.title}</h3>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, marginBottom: '1.25rem' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    {event.location}
+                    {event.location || event.venue || 'TBA'}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6B7280', fontSize: '0.9rem', fontWeight: 500, marginTop: 'auto' }}>
-                    <span>69 Seats left</span>
+                    <span>{event.capacity || event.seats || 'Limited'} Seats left</span>
                     <span style={{ color: '#D1D5DB' }}>|</span>
-                    <span style={{ color: '#E11D48', fontWeight: 700 }}>{event.price}</span>
+                    <span style={{ color: '#E11D48', fontWeight: 700 }}>
+                      {event.tickets && event.tickets.length > 0 ? `₹${event.tickets[0].price}` : (event.price || 'Free')}
+                    </span>
                   </div>
                 </div>
               </motion.div>
