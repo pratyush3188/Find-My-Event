@@ -283,6 +283,7 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
   const maxTeam = event?.teamMax || 4;
   
   const [teamSize, setTeamSize] = useState(isTeam ? minTeam : 1);
+  const [ticketQuantity, setTicketQuantity] = useState(1);
   const [teamMembers, setTeamMembers] = useState([{ name: user?.name || '', email: user?.email || '', phone: (user as any)?.phone || '', customAnswers: [] as any[] }]);
   
   const [currentStep, setCurrentStep] = useState(0); // For multi-step team members
@@ -362,6 +363,20 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
   );
 
   const handleRazorpayPayment = async (orderData: any) => {
+    const loadRazorpay = () => new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+    const isLoaded = await loadRazorpay();
+    if (!isLoaded) {
+      alert("Failed to load Razorpay SDK. Please check your internet connection.");
+      return;
+    }
+
     const options = {
       key: orderData.keyId,
       amount: orderData.amount,
@@ -436,16 +451,18 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
     }
   };
 
-  const validateCurrentStep = () => {
+  const validateCurrentStep = (): { valid: boolean; message?: string } => {
     const m = teamMembers[currentStep];
-    if (!m.name || !m.email || !m.phone) return false;
+    if (!m.name) return { valid: false, message: "Name is required" };
+    if (!m.email) return { valid: false, message: "Email is required" };
+    if (!m.phone) return { valid: false, message: "Phone number is required" };
     
     // Check Custom Questions
     if (event.customQuestions?.length > 0) {
       for (let q of event.customQuestions) {
         if (q.required === 'Required' || q.required === true) {
           const answered = m.customAnswers?.find(a => a.question === q.question);
-          if (!answered || !answered.answer) return false;
+          if (!answered || !answered.answer) return { valid: false, message: `Question "${q.question}" is required` };
         }
       }
     }
@@ -460,14 +477,14 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
     for (let eInfo of activeEduInfoVal) {
       if (eInfo.required === 'Required') {
         const answered = m.customAnswers?.find(a => a.question === eInfo.name);
-        if (!answered || !answered.answer) return false;
+        if (!answered || !answered.answer) return { valid: false, message: `Field "${eInfo.name}" is required` };
       }
     }
 
-    return true;
+    return { valid: true };
   };
 
-  const isCurrentStepValid = validateCurrentStep();
+  const currentStepValidation = validateCurrentStep();
 
   const handleSubmit = async (e: any) => {
      e.preventDefault();
@@ -476,8 +493,13 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
        return;
      }
 
-     if (!isCurrentStepValid) {
-       alert("Please fill all required fields for the current member.");
+     if (!currentStepValidation.valid) {
+       alert(currentStepValidation.message || "Please fill all required fields for the current member.");
+       return;
+     }
+
+     if (currentStep === teamSize - 1 && numericPrice > 0 && ticketQuantity === 0) {
+       alert("Please select a ticket quantity of at least 1 to proceed with payment.");
        return;
      }
 
@@ -499,10 +521,10 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
           const { data: orderData } = await api.post('/payments/create-order', {
             eventId: actualEventId,
             eventModel: actualModel,
-            ticketsCount: teamSize,
+            ticketsCount: ticketQuantity,
             teamSize: teamSize,
             teamMembers: teamMembers,
-            customAnswers: [] // Backend now reads from teamMembers[idx].customAnswers
+            customAnswers: teamMembers[0].customAnswers || []
           });
           
           await handleRazorpayPayment(orderData);
@@ -511,7 +533,7 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
             ticketType: selectedTicket,
             teamSize: teamSize,
             teamMembers: teamMembers,
-            customAnswers: []
+            customAnswers: teamMembers[0].customAnswers || []
           };
           await api.post(`/events/${actualEventId}/register`, payload);
           setStep(2);
@@ -535,7 +557,7 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
 
   const ticketPriceStr = event.tickets?.find((t: any) => t.category === selectedTicket)?.price;
   const numericPrice = ticketPriceStr === 'Free' || ticketPriceStr === '0' ? 0 : Number(ticketPriceStr || event.pricing?.ticketPrice || 0);
-  const totalAmount = numericPrice * teamSize;
+  const totalAmount = numericPrice > 0 ? numericPrice * ticketQuantity : 0;
   const currentMember = teamMembers[currentStep];
 
   return (
@@ -602,7 +624,7 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
              <motion.div key={currentStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
                 <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#334155', fontWeight: 800, display: 'flex', justifyContent: 'space-between' }}>
-                        {isTeam ? `Member ${currentStep + 1} Details ${currentStep === 0 ? '👑 (Leader)' : ''}` : 'Participant Details'}
+                        {isTeam ? `Member ${currentStep + 1} Details` : 'Participant Details'}
                         {isTeam && <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#8B5CF6' }}>{currentStep + 1} of {teamSize}</span>}
                     </h4>
                     
@@ -735,35 +757,47 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '1rem' }}>
                   <label style={{ fontSize: '0.9rem', fontWeight: 800, color: '#111827' }}>Select Pass / Ticket</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {event.tickets.map((t: any, i: number) => (
+                    {event.tickets.map((t: any, i: number) => {
+                      const isFree = t.price === 'Free' || t.price === '0';
+                      const isSelected = selectedTicket === t.category;
+                      return (
                       <div 
                         key={i} 
-                        onClick={() => setSelectedTicket(t.category)}
+                        onClick={() => { setSelectedTicket(t.category); if(!isFree) setTicketQuantity(1); }}
                         style={{ 
                           padding: '1rem', 
-                          border: selectedTicket === t.category ? '2px solid #8B5CF6' : '1px solid #e2e8f0', 
+                          border: isSelected ? '2px solid #8B5CF6' : '1px solid #e2e8f0', 
                           borderRadius: '12px', 
                           cursor: 'pointer', 
                           display: 'flex', 
                           justifyContent: 'space-between', 
                           alignItems: 'center',
-                          background: selectedTicket === t.category ? '#F5F3FF' : '#fff'
+                          background: isSelected ? '#F5F3FF' : '#fff'
                         }}
                       >
                         <div>
                           <p style={{ margin: 0, fontWeight: 700, color: '#1e293b' }}>{t.category}</p>
                         </div>
-                        <div style={{ fontWeight: 800, color: '#8B5CF6' }}>
-                           {t.price === 'Free' || t.price === '0' ? 'Free' : `₹${t.price}`}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                           <span style={{ fontWeight: 800, color: '#8B5CF6' }}>
+                              {isFree ? 'Free' : `₹${t.price}`}
+                           </span>
+                           {!isFree && isSelected && (
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e2e8f0', borderRadius: '6px', padding: '2px 4px' }} onClick={e => e.stopPropagation()}>
+                                 <button type="button" onClick={() => setTicketQuantity(prev => Math.max(0, prev - 1))} style={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, color: '#111' }}>-</button>
+                                 <span style={{ fontSize: '0.9rem', fontWeight: 600, width: '12px', textAlign: 'center', color: '#111' }}>{ticketQuantity}</span>
+                                 <button type="button" onClick={() => setTicketQuantity(prev => Math.min(teamSize, prev + 1))} style={{ width: '24px', height: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, color: '#111' }}>+</button>
+                              </div>
+                           )}
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                </motion.div>
              )}
 
              {/* Total Amount Counter */}
-             {currentStep === teamSize - 1 && (
+             {currentStep === teamSize - 1 && numericPrice > 0 && (
              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: '#F5F3FF', border: '1px dashed #8B5CF6', borderRadius: '12px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
                 <span style={{ fontSize: '1.05rem', fontWeight: 600, color: '#4c1d95' }}>Total Amount</span>
                 <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#6d28d9' }}>₹{totalAmount}</span>
@@ -785,18 +819,18 @@ export const RegisterView = ({ event, onBack }: { event: any, onBack: () => void
              
              <motion.button 
                 type="submit"
-                disabled={loading || !isCurrentStepValid}
-                whileHover={{ scale: (isCurrentStepValid && !loading) ? 1.02 : 1 }} 
-                whileTap={{ scale: (isCurrentStepValid && !loading) ? 0.98 : 1 }}
+                disabled={loading}
+                whileHover={{ scale: (!loading) ? 1.02 : 1 }} 
+                whileTap={{ scale: (!loading) ? 0.98 : 1 }}
                 style={{ 
                 background: '#8B5CF6',
                 color: '#ffffff',
-                padding: '1rem', borderRadius: '12px', fontWeight: 600, border: 'none', cursor: (isCurrentStepValid && !loading) ? 'pointer' : 'not-allowed',
+                padding: '1rem', borderRadius: '12px', fontWeight: 600, border: 'none', cursor: (!loading) ? 'pointer' : 'not-allowed',
                 fontSize: '1.05rem', fontFamily: 'inherit',
                 transition: 'all 0.3s',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                opacity: (isCurrentStepValid && !loading) ? 1 : 0.5,
-                boxShadow: (isCurrentStepValid && !loading) ? '0 10px 25px rgba(139, 92, 246, 0.4)' : 'none',
+                opacity: (!loading) ? 1 : 0.5,
+                boxShadow: (!loading) ? '0 10px 25px rgba(139, 92, 246, 0.4)' : 'none',
                 flex: 1
                 }}>
                 {loading ? <Loader2 size={24} className="spin" /> : (

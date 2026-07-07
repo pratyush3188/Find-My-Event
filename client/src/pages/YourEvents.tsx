@@ -44,7 +44,7 @@ export default function YourEvents() {
         </button>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '3rem' }}>
-          <h1 style={{ color: 'var(--text-primary)', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, marginBottom: '0.5rem' }}>Your Events</h1>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 600, marginBottom: '0.5rem' }}>Your Events</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Manage and track the events you've created.</p>
         </motion.div>
 
